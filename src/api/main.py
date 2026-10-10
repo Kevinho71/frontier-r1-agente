@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hmac
 import os
+import time
 import uuid
 from collections import OrderedDict
 
@@ -19,7 +20,7 @@ from logs import TaskLog
 
 TASK_TIMEOUT_S = 280  # el evaluador corta a los 300 s: el estado final debe quedar escrito antes
 HARD_CAP_S = 292
-MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT", "4"))
+MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT", "16"))
 MAX_STORED = 500
 
 
@@ -53,10 +54,12 @@ def create_app(runner=run_task, log_dir: str | None = None) -> FastAPI:
         async with sem:
             sink.set(log.write)
             log.write("start", tarea=req.tarea)
+            # El reloj del evaluador corre desde el POST: lo esperado en la cola se descuenta.
+            waited = time.monotonic() - rec["t0"]
             try:
                 res = await asyncio.wait_for(
-                    runner(req.tarea, req.escritorio.url, req.escritorio.password, timeout_s=TASK_TIMEOUT_S),
-                    timeout=HARD_CAP_S,
+                    runner(req.tarea, req.escritorio.url, req.escritorio.password, timeout_s=max(60, int(TASK_TIMEOUT_S - waited))),
+                    timeout=max(60.0, HARD_CAP_S - waited),
                 )
                 rec.update(estado=res.estado, resumen=redact_text(res.resumen, secrets))
             except asyncio.TimeoutError:
@@ -72,7 +75,7 @@ def create_app(runner=run_task, log_dir: str | None = None) -> FastAPI:
     @app.post("/tasks", status_code=202, dependencies=[Depends(auth)])
     async def create_task(req: TaskRequest):
         task_id = uuid.uuid4().hex
-        tasks[task_id] = {"estado": "en_curso", "resumen": ""}
+        tasks[task_id] = {"estado": "en_curso", "resumen": "", "t0": time.monotonic()}
         while len(tasks) > MAX_STORED:
             tasks.popitem(last=False)
         t = asyncio.create_task(execute(task_id, req))

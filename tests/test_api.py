@@ -101,6 +101,10 @@ class ApiTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(r.status_code, 200)
             self.assertIn('"event": "paso"', r.text)
             self.assertNotIn("pw-secreta-123", r.text)
+            end = [__import__("json").loads(l) for l in r.text.splitlines() if '"event": "end"' in l][0]
+            self.assertIn("duration_s", end)
+            self.assertEqual(end["cost_usd"], 0.0)
+            self.assertEqual(end["steps"], 1)
             self.assertEqual((await c.get("/tasks/nope/log", headers=AUTH)).status_code, 404)
 
 

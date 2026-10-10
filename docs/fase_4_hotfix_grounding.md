@@ -207,3 +207,22 @@ tras corregirlo aparecieron otros 6 bloqueantes que los prompts solos no arregla
 ## 4. Pendiente
 
 E5 (ambigüedad de homónimos ⇒ `fallida` con NITs), y probar E1, E2, E4. Ver `docs/proximo_paso.md`.
+
+---
+
+# Iteración 4 — Ambigüedad, anti-duplicado y robustez (E1–E5 pasan)
+
+| # | Problema (evidencia) | Arreglo |
+|---|---|---|
+| 1 | E5: ante homónimos el agente intentaba abrir "la ficha" sin reconocer la ambigüedad | `plan.txt` marca el hito de localizar (`localiza_registro`); `agent/disambiguate.py`: transcribe todas las columnas (`table_full`), LLM de texto propone candidatos (`match_rows`), el **código** decide (>1 ⇒ `fallida` nombrando cada fila); falla cerrada si no se puede verificar |
+| 2 | Clic en el campo de filtro con el valor escrito en vez de en la fila | `select.txt`: abrir fila = clicar su código/enlace; el hito siguiente recibe la fila identificada como pista |
+| 3 | E1: riesgo de doble guardado | `ActState.committed` + `blocked()`: no repetir el mismo botón de confirmación salvo error de validación |
+| 4 | E1: guardado correcto reportado como fallo (la app no muestra mensaje; el título pasa a "Cliente CL-xxxx") | `check.txt`/`plan.txt`: varias señales de guardado válidas; un botón de aplicar visible no implica "no guardado" |
+| 5 | Excepción `ValueError(3072345193)` de asyncvnc (flujo RFB desincronizado) mató una tarea | `capture.screenshot` reconecta (`client._reconnect`) y reintenta una vez |
+| 6 | `Costo:` subestimado | `cost_acc` (contextvar) suma todas las llamadas |
+| 7 | `check()` comparaba el frame consigo mismo (diff muerto) | eliminado |
+| 8 | Caja pegada al borde (`x1=1` en 0–1000) se leía como fracción | `_to_px` con escala fija |
+| 9 | `LLMError` en `act`/`check` tumbaba la tarea | gasta un intento del hito |
+| 10 | Prompts/tests con nombres de la app | genéricos (ejemplos "Acme", "Menú A") |
+
+Resultado: E1–E5 pasan `/__check` (una corrida cada una). Pendiente: varianza, deploy, tareas no vistas.

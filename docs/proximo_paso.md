@@ -1,69 +1,56 @@
-# Próximo paso — E5 (homónimos) y el resto de pruebas oficiales
+# Próximo paso — deploy y robustez
 
-> Documento de traspaso. Complementa a `AGENTS.md` y `docs/fase_4_hotfix_grounding.md` (Iteración 3).
+> Documento de traspaso. Complementa a `AGENTS.md` y `docs/fase_4_hotfix_grounding.md`.
 
 ## Estado
 
-**E3 resuelta** (`¿Cuántas facturas vencidas tiene Ferretería Ruiz?` → `respuesta: 45`, `terminada`,
-~134 s, ~$0.006). La causa no era solo de prompts; ver Iteración 3 del hotfix. Tests: 63 en verde
-(`PYTHONPATH=src python -m unittest tests.test_model tests.test_agent -v`).
+Las 5 pruebas oficiales pasan `/__check` contra el escritorio de pruebas (1 corrida cada una, ~$0.01–0.02
+por tarea, 12–18 pasos). Tests sin red: 83 en verde.
 
-| Prueba | Estado |
+| Prueba | Resultado |
 |---|---|
-| E1 crear cliente | ⬜ no intentada |
-| E2 corregir dirección con nota | ⬜ no intentada |
-| E3 pregunta → `45` | ✅ (45 / terminada) |
-| E4 exportar pedidos entregados sep-2026 | ⬜ no intentada |
-| E5 homónimos → `fallida` + NITs | ⚠️ termina `fallida` y NO modifica nada, pero el resumen no nombra los NITs |
+| E1 crear cliente | ✅ terminada, sin duplicados |
+| E2 corregir dirección | ✅ terminada |
+| E3 pregunta | ✅ `respuesta: 45` |
+| E4 exportar septiembre | ✅ terminada (filtros + Exportar) |
+| E5 homónimos | ✅ fallida, resumen nombra CL-0005/CL-0031 con sus NIT |
 
-## Qué falla ahora
+API (`src/api`) y logs (`src/logs`) hechos; E3 verificado a través del servicio local. Imagen Docker
+construida y probada (`/health`, 401 sin token).
 
-**E5** (`Cambia el teléfono de Ana Torres a 3014445566.`, esperado `fallida` con `52345678` y
-`1019876543` en el resumen). El agente llega al listado y ve dos "Ana Torres" (CL-0005, CL-0031),
-pero no reconoce la ambigüedad: intenta "abrir la ficha" hasta agotar intentos (`pantalla sin cambios`).
-Termina `fallida` por casualidad, sin las claves de razón. Falta una **detección explícita de
-ambigüedad**: cuando una búsqueda devuelve >1 registro que coincide con el nombre de la tarea y nada
-en la tarea los distingue, abortar con `fallida` y nombrar los identificadores (NIT/código) de cada uno.
-Sitio natural: un paso de "desambiguación" tras filtrar (leer la tabla con `_ask_table`, ya existe) en
-vez de seguir con acciones de escritura.
+## Pendiente (en orden)
 
-Luego intentar E1, E2 y E4 (E4 requiere filtros de fecha + estado + botón Exportar; el conteo/tabla ya
-está cubierto, la exportación no).
+1. **Deploy (Fase 7):** subir la imagen a Railway/Fly (contenedor persistente). Variables: `TEAM_TOKEN`,
+   `OPENROUTER_API_KEY`, opcional `DATA_DIR` (volumen), `MAX_CONCURRENT`. Luego `GET /health` y un POST real.
+2. **Medir varianza:** repetir cada prueba 3–5 veces (con `--reset`) y registrar tasa de éxito. Una
+   corrida por prueba no es evidencia de fiabilidad.
+3. **Falsos éxitos:** `terminada` = "el verificador visual (VLM) lo aprobó". Idea pendiente: tras guardar,
+   releer el registro desde el listado y comparar.
+4. **Generalización:** probar con tareas no vistas (otras entidades, borrar, fechas relativas, dos datos en
+   `respuesta:`). Los prompts son genéricos, pero solo se han ejercitado con esta app.
+5. **Costo/latencia:** ~20 s de plan + ~12 s por paso; las tareas largas se acercan a los 250 s útiles.
 
 ## Cosas que aprendimos (no redescubrir)
 
-- **Qwen3-VL devuelve cajas en escala 0–1000**, no 0–1 ni píxeles. Antes se interpretaba mal y daba
-  clics fuera de lugar de forma intermitente. Ahora `vision/locate.py` divide entre 1000 (error ≤9 px).
-- **El escritorio ignora input unos segundos tras conectar** (4 s no basta, 15 s sí). El plan (~20 s)
-  lo cubre; si algún día la primera acción se adelanta, perderá el primer clic.
-- **`select_all` estaba roto** (`'ctrl'` no es un keysym de asyncvnc → `Control_L`). `type` ahora hace
-  Ctrl+A antes (idempotente ante reintentos).
-- **`deepseek-v4-flash` es de razonamiento**: sus tokens de pensamiento truncaban el JSON. Se desactiva
-  con `reasoning: {"enabled": false}` (en `model/client.py`).
-- **Leer tablas**: 30b omite filas; 235b y 72b dan 45 exacto (`spikes/table_bench.py`). Se transcribe y
-  el filtrado/conteo se hace en código (+ LLM de texto para el predicado), nunca "contando" con el VLM.
-- **Paginación la decide el código** (clic en "Siguiente" + diff), no el VLM (que alucinaba
-  `hay_mas_paginas`/`total_visible`).
-- **La app cambia entre corridas**: aparece un modal "Novedades v4.2" a veces, y el botón "Buscar" a veces
-  se llama "Filtrar". Los prompts son genéricos por eso.
-- **Definición de "vencida"**: `Estado == "Vencida"` con nombre EXACTO. "Pendiente" con fecha pasada no
-  cuenta y "Ferretería Ruiz e Hijos" es otro cliente (la búsqueda es "contiene").
-- **Latencia**: el detector (235b) tarda 4–45 s según el proveedor. Se mitiga lanzando la detección de la
-  pantalla nueva en paralelo con el `check` (`prefetched` en `act()`), y `provider.sort=latency`.
+- **Qwen3-VL devuelve cajas en escala 0–1000**; el código convierte y clica el centro de la caja.
+- **El escritorio ignora input unos segundos tras conectar**; el plan (~20 s) lo cubre.
+- **`deepseek-v4-flash` es de razonamiento**: se desactiva con `reasoning: {"enabled": false}`.
+- **Leer tablas**: 235b/72b transcriben bien, 30b omite filas. El conteo lo hace el código.
+- **La app cambia entre corridas** (modal de novedades, "Buscar"/"Filtrar"): prompts genéricos.
+- **Tras guardar, la app puede no mostrar mensaje**: el formulario pasa a "Cliente CL-xxxx" y el botón
+  sigue visible. `check.txt` acepta varias señales de guardado.
+- **Desincronización RFB** (visto una vez: `ValueError` con codificación basura): `desktop.capture.screenshot`
+  reconecta y reintenta una vez.
+- **Un fallo de LLM en `act`/`check`** gasta un intento del hito, no la tarea.
 
 ## Cómo verificar
 
 ```bash
 cd /home/kevin/RETO1FRONTIER && source .venv/bin/activate && set -a && source .env && set +a
-RETO1_TRACE=1 PYTHONPATH=src python spikes/live_agent_test.py "<tarea>" --reset   # traza por paso a stderr
-PYTHONPATH=src python -m unittest tests.test_model tests.test_agent -v
+RETO1_DUMP=/tmp/x RETO1_TRACE=1 PYTHONPATH=src python spikes/live_agent_test.py "<tarea>" --reset
+curl -s -X POST -H "Authorization: Bearer $TOKEN_ESCRITORIO" -H "Content-Type: application/json" \
+  -d @frontier-reto-1/pruebas/E1-crear-cliente.json <URL_ESCRITORIO>/__check
+PYTHONPATH=src python -m unittest tests.test_model tests.test_agent tests.test_api -v
 ```
 
-Spikes útiles (usan `spikes/captures/`, gitignored, local): `detector_bench.py` (precisión/latencia del
-detector vs verdad de terreno), `table_bench.py` (transcripción de tablas), `dump_client_pages.py`
-(captura todas las páginas de facturas de un cliente para leerlas a mano).
-
-## Referencias
-
-1. `AGENTS.md` · 2. `docs/fase_4_hotfix_grounding.md` · 3. `docs/plan_implementacion.md` *(gitignored)* ·
-4. `RETO1_CONTEXTO.md`, `frontier-reto-1/` *(gitignored)*.
+Ojo: `/__check` justo después de `--reset` da `pass:false` en tareas con cambios (es el estado base).

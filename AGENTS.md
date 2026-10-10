@@ -21,7 +21,9 @@ y lo opera **solo con píxeles** (prohibido el DOM), como lo haría un empleado 
 - ✅ **Fase 3** `src/model/` — router por capacidad + cliente OpenRouter (retry/429→agotado) + prompts.
 - ✅ **Fase 4** `src/agent/` — loop plan→act(batch)→check + resumen con formato exacto y redacción.
 - ✅ **Iteración 3** (planificación + estado entre pasos + lectura de tablas): **E3 pasa (45)**. Ver `docs/fase_4_hotfix_grounding.md`.
-- ⬜ Fase 5 `api/store/queue`, Fase 6 `logs/`, Fase 7 deploy.
+- ✅ **Iteración 4**: control de ambigüedad (E5), guard anti-duplicado (E1), prompts genéricos. **E1–E5 pasan `/__check`** (1 corrida cada una; falta medir varianza).
+- ✅ **Fase 5/6** `src/api/` (FastAPI, store en memoria, workers asyncio) + `src/logs/` (JSONL por tarea redactado). **Dockerfile** probado localmente.
+- ⬜ **Fase 7 deploy**: subir la imagen a Railway/Fly (requiere cuenta) y verificar `/health` + una tarea.
 
 **Plan maestro:** `docs/plan_implementacion.md` (contiene credenciales → NO commitear).
 **Síntesis por fase:** `docs/fase_1_desktop.md`, `docs/fase_2_vision.md`, `docs/fase_3_model.md`, `docs/fase_4_agent.md`, `docs/fase_4_hotfix_grounding.md`.
@@ -46,7 +48,7 @@ src/desktop/   I/O: connect(url,pwd) [context manager], screenshot, click, type,
 src/vision/    percepción barata: crop_region, downscale, changed, diff_fraction, extract_text, detect_elements
 src/model/     router por capacidad (registry+router) + cliente OpenRouter (client) + prompts
 src/agent/     loop híbrido plan→act(batch)→check, con resumen formato exacto
-src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
+src/api/       FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}; src/logs/ JSONL por tarea (DATA_DIR)
 ```
 
 ## Decisiones de diseño clave (no deshacer sin razón)
@@ -64,7 +66,10 @@ src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 - **Plan por entidad objetivo** (genérico, sin nombres de la app): navegar al listado de la entidad; cliente/estado/fechas son filtros dentro de él. Cada hito lleva `pantalla_esperada` que usa `check`.
 - **`act()` con memoria** (`ActState`, `history`, `feedback`) y detección **en paralelo** con el `check` (`prefetched`).
 - **Conteos**: transcribir tabla (235b) + paginar por código + filtrar ids con LLM de texto + contar en código. Nunca confiar en que el VLM cuente ni en su `hay_mas_paginas`.
-- **Pendiente: E5** (homónimos ⇒ `fallida` nombrando NITs) y E1/E2/E4. Ver `docs/proximo_paso.md`.
+- **Ambigüedad genérica:** el plan marca el hito de localizar (`localiza_registro`); `agent/disambiguate.py` transcribe el listado (todas las columnas), un LLM de texto propone candidatos y el CÓDIGO decide (>1 ⇒ `fallida` nombrando cada fila). Falla cerrada: si no se puede verificar, no se toca nada.
+- **Guard anti-duplicado:** `ActState.committed` bloquea volver a pulsar el mismo botón de confirmación (Guardar/Crear/Exportar…) salvo error de validación.
+- **Costo:** `model.client.cost_acc` (contextvar) acumula TODAS las llamadas de la tarea.
+- **Prompts genéricos:** nada de nombres de la app (la de evaluación es otra). Los datos de prueba solo viven en `tests/` y `spikes/`.
 - **Contenedor persistente** (Fly.io/Railway), no Lambda (el WS VNC vive 5 min; cold-start come presupuesto).
 
 ## Cómo verificar
@@ -73,7 +78,7 @@ src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 - Oráculo dev: `POST /__reset` y `POST /__check` (endpoints del escritorio, Bearer con token).
 - Pruebas oficiales E1–E5 en `frontier-reto-1/pruebas/` (gitignored, son material).
 - Tests de `model/`: `PYTHONPATH=src python -m unittest tests.test_model -v` (sin red).
-- Tests de `agent/`: `PYTHONPATH=src python -m unittest tests.test_agent -v` (sin red). Traza en vivo: `RETO1_TRACE=1`.
+- Tests: `PYTHONPATH=src python -m unittest tests.test_model tests.test_agent tests.test_api -v` (sin red). Traza en vivo: `RETO1_TRACE=1`; frames por paso: `RETO1_DUMP=<dir>`.
 - Verificar IDs del catálogo contra OpenRouter (necesita `OPENROUTER_API_KEY`): `PYTHONPATH=src python spikes/model_test.py`.
 
 ## Reglas de commit

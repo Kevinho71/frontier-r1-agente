@@ -86,6 +86,23 @@ class ApiTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"event": "paso"', text)
         self.assertNotIn("pw-secreta-123", text)
 
+    async def test_endpoint_de_log(self):
+        async def runner(*a, **kw):
+            from agent.trace import trace
+
+            trace("paso", clave="pw-secreta-123")
+            return TaskResult("terminada", "ok", 1, 0.0)
+
+        async with self.client(runner) as c:
+            tid = (await c.post("/tasks", json=BODY, headers=AUTH)).json()["task_id"]
+            await self._poll(c, tid)
+            self.assertEqual((await c.get(f"/tasks/{tid}/log")).status_code, 401)
+            r = await c.get(f"/tasks/{tid}/log", headers=AUTH)
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('"event": "paso"', r.text)
+            self.assertNotIn("pw-secreta-123", r.text)
+            self.assertEqual((await c.get("/tasks/nope/log", headers=AUTH)).status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()

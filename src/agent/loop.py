@@ -23,7 +23,7 @@ from .types import Milestone, TaskResult
 DEFAULT_TIMEOUT_S = 300
 DEFAULT_RESERVE_S = 30
 DEFAULT_MAX_STEPS = 40
-MAX_ATTEMPTS_PER_MILESTONE = 7
+MAX_ATTEMPTS_PER_MILESTONE = 10
 
 
 async def run_task(

@@ -9,6 +9,7 @@ import uuid
 from collections import OrderedDict
 
 from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from agent.loop import run_task
@@ -85,6 +86,18 @@ def create_app(runner=run_task, log_dir: str | None = None) -> FastAPI:
         if rec is None:
             raise HTTPException(status_code=404, detail="task not found")
         return {"estado": rec["estado"], "resumen": rec["resumen"]}
+
+    @app.get("/tasks/{task_id}/log", dependencies=[Depends(auth)], response_class=PlainTextResponse)
+    async def get_log(task_id: str):
+        """Traza JSONL de la tarea (ya redactada): para depurar por qué una tarea falló."""
+        if task_id not in tasks:
+            raise HTTPException(status_code=404, detail="task not found")
+        path = os.path.join(data_dir, "tasks", f"{task_id}.jsonl")
+        try:
+            with open(path, encoding="utf-8") as fh:
+                return fh.read()[-200_000:]
+        except OSError:
+            raise HTTPException(status_code=404, detail="log not available")
 
     return app
 

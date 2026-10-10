@@ -24,7 +24,8 @@ PRUEBAS = os.path.join(os.path.dirname(__file__), "..", "frontier-reto-1", "prue
 
 
 def load(tid):
-    path = glob.glob(os.path.join(PRUEBAS, f"{tid}-*.json"))[0]
+    extra = glob.glob(os.path.join(os.path.dirname(__file__), "extra", f"{tid}-*.json"))
+    path = extra[0] if extra else glob.glob(os.path.join(PRUEBAS, f"{tid}-*.json"))[0]
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
 
@@ -53,7 +54,7 @@ def run_one(base, team, pwd, dtoken, test):
         if out["estado"] != "en_curso":
             break
     elapsed = time.time() - t0
-    chk = httpx.post(DESK + "/__check", headers={"Authorization": f"Bearer {dtoken}"}, json=test, timeout=60).json()
+    chk = httpx.post(DESK + "/__check", headers={"Authorization": f"Bearer {dtoken}"}, json={k: v for k, v in test.items() if k != "respuesta_completa"}, timeout=60).json()
     resumen = out["resumen"]
     problems = []
     if out["estado"] != test["estado_esperado"]:
@@ -67,6 +68,12 @@ def run_one(base, team, pwd, dtoken, test):
     for k in test.get("claves_razon", []):
         if k not in resumen:
             problems.append(f"falta clave {k} en el resumen")
+    if "respuesta_completa" in test:
+        line = next((l for l in resumen.splitlines() if l.lower().startswith("respuesta:")), "")
+        want = [x.strip().lower() for x in test["respuesta_completa"].split(";")]
+        got = [x.strip().lower() for x in line.split(":", 1)[-1].split(";")]
+        if got != want:
+            problems.append(f"respuesta {line!r} != {test['respuesta_completa']}")
     if pwd in resumen:
         problems.append("EL RESUMEN FILTRA LA CONTRASEÑA")
     if test["estado_esperado"] == "fallida" and "respuesta:" in resumen.lower() and "respuesta_esperada" not in test:

@@ -10,6 +10,16 @@ from .trace import trace
 from .types import Milestone
 
 
+class TaskRejected(Exception):
+    """El plan decidió que la tarea es imposible, contradictoria o peligrosa: no se toca nada."""
+
+
+def parse_rejection(parsed) -> str:
+    r = (parsed or {}).get("rechazo") if isinstance(parsed, dict) else None
+    r = str(r).strip() if r else ""
+    return "" if r.lower() in ("null", "none", "false") else r
+
+
 def parse_plan(parsed) -> list[Milestone]:
     """Convierte la respuesta del modelo en hitos. Acepta {"hito","pantalla_esperada"} o strings."""
     out: list[Milestone] = []
@@ -48,6 +58,10 @@ async def plan(client, task: str) -> list[Milestone]:
             max_tokens=768,
         )
         hitos = parse_plan(res.parsed)
+        rejection = parse_rejection(res.parsed)
+        if rejection and not hitos:
+            trace("plan.rechazo", motivo=rejection)
+            raise TaskRejected(rejection)
         if hitos:
             trace("plan", hitos=[(h.text, h.expected) for h in hitos], ocr=context[:300])
             return hitos

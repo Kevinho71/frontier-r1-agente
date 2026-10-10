@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextvars
 import os
 import sys
 import time
@@ -9,6 +10,11 @@ import time
 from .redact import redact_text
 
 _T0 = time.monotonic()
+
+
+# Destino opcional de los eventos (p. ej. el log JSONL de la tarea en curso). Es un contextvar
+# para que cada tarea concurrente escriba en su propio log.
+sink: contextvars.ContextVar = contextvars.ContextVar("trace_sink", default=None)
 
 
 def enabled() -> bool:
@@ -36,6 +42,12 @@ def dump_frame(frame, tag: str = "") -> None:
 
 def trace(event: str, **data) -> None:
     """Imprime una línea de traza en stderr si RETO1_TRACE está activo."""
+    out = sink.get()
+    if out is not None:
+        try:
+            out(event, **{k: v for k, v in data.items()})
+        except Exception:
+            pass
     if not enabled():
         return
     body = " ".join(f"{k}={v!r}" for k, v in data.items())

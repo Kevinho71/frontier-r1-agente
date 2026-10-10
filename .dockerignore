@@ -1,0 +1,9 @@
+.venv
+.designvenv
+.env
+RETO1_CONTEXTO.md
+frontier-reto-1
+docs/plan_implementacion.md
+spikes/captures
+design
+**/__pycache__

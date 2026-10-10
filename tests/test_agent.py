@@ -2,9 +2,10 @@
 
 import unittest
 
-from agent.actions import normalize_coords, normalize_key
+from agent.actions import find_element, normalize_coords, normalize_key, normalize_text
 from agent.redact import redact_text
 from agent.summarize import format_summary, is_question
+from vision.locate import Element, _box_center
 
 
 class ActionsTest(unittest.TestCase):
@@ -67,6 +68,29 @@ class RedactTest(unittest.TestCase):
 
     def test_redact_ignora_cortos(self):
         self.assertEqual(redact_text("abc", ["abc"]), "abc")
+
+
+class LocateTest(unittest.TestCase):
+    def test_normalize_text(self):
+        self.assertEqual(normalize_text("Papelería"), "papeleria")
+        self.assertEqual(normalize_text("  Cartera "), "cartera")
+
+    def test_find_element_exact(self):
+        els = [Element("Archivo", 40, 50), Element("Cartera", 205, 50)]
+        self.assertEqual(find_element(els, "Cartera").x, 205)
+
+    def test_find_element_fuzzy(self):
+        els = [Element("Papelería Los Andes", 100, 100)]
+        self.assertEqual(find_element(els, "papeleria").x, 100)
+
+    def test_find_element_none(self):
+        self.assertIsNone(find_element([Element("A", 1, 1)], "zzz"))
+
+    def test_box_center_normalizado(self):
+        self.assertEqual(_box_center([0.14, 0.02, 0.18, 0.06], 1280, 800), (204, 32))
+
+    def test_box_center_absoluto(self):
+        self.assertEqual(_box_center([140, 48, 178, 70], 1280, 800), (159, 59))
 
 
 if __name__ == "__main__":

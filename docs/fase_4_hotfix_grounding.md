@@ -106,3 +106,64 @@ acotada con verificación barata", que es robusto y generalizable a la app de ev
 - En vivo: `check()` ahora distingue "Comercial abierto ≠ Cartera" (`ok:false`, `changed:true`).
 - En vivo: `plan()` devuelve hitos correctos; `qwen` devuelve JSON para CHECK/GROUND.
 - Escritorio reseteado (`/__reset` 200) tras cada prueba.
+
+---
+
+# Iteración 2 — Grounding por detección ("detectar + seleccionar")
+
+## 1. Resumen
+
+Se reemplazó la **regresión de coordenadas** (el modelo adivina `x,y`) por **detección de elementos
+con bounding boxes + selección por etiqueta** (método OmniParser). El clic sale del centro de la caja
+detectada, no de una coordenada adivinada. Validado en vivo: `detect_elements` ubica "Cartera" en
+`x≈211` (correcto) y el decisor elige `click_text "Cartera"`.
+
+## 2. Por qué (retomando el diagnóstico)
+
+Los modelos de visión **sí son fiables enumerando "qué hay y con qué caja"**, pero **no regresando un
+punto exacto**. Evidencia en vivo (boxes de la barra de menú):
+
+| Modelo | Box "Cartera" | ¿Correcto? |
+|---|---|---|
+| `qwen3-vl-30b-a3b` | `[140,48,178,70]` px → centro 159 | ❌ (159 es Comercial) |
+| `qwen2.5-vl-72b` | `[0.14,0.02,0.18,0.06]` → centro 205 | ✅ (clic 205 abre Cartera→Facturas) |
+| `qwen3-vl-235b` | `[0.14,0.02,0.18,0.06]` → centro 205 | ✅ |
+
+Clicar el centro de la caja **correcta** abre el menú esperado. La posición la aporta el detector,
+no el LLM que decide.
+
+## 3. Qué cambió
+
+| Archivo | Cambio |
+|---|---|
+| `model/prompts/detect.txt` | (nuevo) pedir elementos interactivos con box normalizada |
+| `model/prompts/select.txt` | (nuevo) decidir acción por etiqueta sobre la lista de elementos |
+| `vision/locate.py` | (nuevo) `detect_elements(frame) -> (Element[], cost)`; `_box_center` auto-detecta 0–1 vs px |
+| `agent/actions.py` | `click_text` + `find_element` (fuzzy: sin acentos/espacios) + `normalize_text` |
+| `agent/act.py` | detecta → decide (texto barato) → ejecuta; fallback a grounding por visión si no detecta |
+| `tests/` | +6 tests (normalize_text, find_element, box_center) → **31 tests** |
+
+## 4. Tradeoffs
+
+| Decisión | Elegido | Alternativa | Por qué |
+|---|---|---|---|
+| Detector | `qwen3-vl-235b-a22b` (VLM vía API) | OCR local (tesseract/easyocr) | cumple "solo LLM por API", sin dep de sistema; boxes correctas |
+| Decisión | texto (`deepseek`) sobre la lista de etiquetas | visión (`qwen`) otra vez | decidir por etiqueta es barato y suficiente |
+| Coordenadas | auto-detect 0–1 / px en `_box_center` | un solo convenio | los modelos mezclan ambos formatos |
+| Match de etiqueta | fuzzy (sin acentos, substring) | exacto | OCR/VLM varía acentos ("Papelería" vs "papeleria") |
+
+## 5. Resultado E3 (tras esta iteración)
+
+- **Grounding resuelto:** el agente ya navega dentro de la app (clic en menús funciona). Al final
+  quedó en la pantalla **"Clientes"** con datos reales (tabla de clientes), no en el home.
+- **Sigue fallando E3:** `respuesta: 0` (esperado `45`). Causa: el agente fue a **Clientes** en vez
+  de **Facturas** — un problema de **planificación/decisión** (qué submenú elegir), no de grounding.
+
+## 6. Bloqueante restante: planificación (no grounding)
+
+El loop ahora ejecuta los clics que pide; el error es **semántico**: ante "facturas vencidas", el plan
+lo lleva a "Clientes". Es el reto central del brief ("aprender a usar la app como empleado nuevo"):
+- Mejorar `plan.txt` para que descomponga según el **módulo correcto** (facturas ≠ clientes).
+- Que `select`/`check` verifiquen que llegó al módulo esperado (con OCR de contexto) y corrijan.
+
+Próximo paso: afinar `plan`/`select`/`check` con la app real, no más cambios de grounding.

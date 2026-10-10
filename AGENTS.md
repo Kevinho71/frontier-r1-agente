@@ -41,7 +41,7 @@ PYTHONPATH=src python ...          # el código vive en src/
 
 ```
 src/desktop/   I/O: connect(url,pwd) [context manager], screenshot, click, type, select_all
-src/vision/    percepción barata: crop_region, downscale, changed, diff_fraction, extract_text
+src/vision/    percepción barata: crop_region, downscale, changed, diff_fraction, extract_text, detect_elements
 src/model/     router por capacidad (registry+router) + cliente OpenRouter (client) + prompts
 src/agent/     loop híbrido plan→act(batch)→check, con resumen formato exacto
 src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
@@ -57,7 +57,8 @@ src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 - **Umbral de diff 0.1%** (`changed`) porque un dropdown cambia ~0.25% pero el "sin cambio" da 0.0.
 - **`check()` decide el avance, no el grounding** (el `done` auto-reportado del modelo era falso; ver `docs/fase_4_hotfix_grounding.md`).
 - **CHECK/GROUND con `qwen3-vl-30b`** (`ling` no soporta `json_object`; `ui-tars` devuelve coords en píxeles y apunta mal).
-- **Grounding impreciso (pendiente):** los modelos de visión no ubican texto a nivel de píxel; próxima iteración = búsqueda + verificación con OCR.
+- **Grounding por detección (detect + select):** `vision/locate.py` detecta elementos con bounding boxes y `click_text` clica el centro de la caja; nunca se adivina una coordenada. Detector `qwen3-vl-235b` (validado: 30b da boxes mal).
+- **Pendiente: planificación.** El loop clica bien, pero ante "facturas vencidas" va a "Clientes" en vez de "Facturas" (error semántico de plan/select/check, no de grounding).
 - **Contenedor persistente** (Fly.io/Railway), no Lambda (el WS VNC vive 5 min; cold-start come presupuesto).
 
 ## Cómo verificar

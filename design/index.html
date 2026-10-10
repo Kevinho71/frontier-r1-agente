@@ -261,6 +261,27 @@
       </ul>
     </div>
   </div>
+
+  <h3>1.10 · Observabilidad</h3>
+  <p>Cada paso genera una línea <strong>JSONL</strong> (trazable, barata, redacta secretos):</p>
+  <pre>{"ts":"…","task_id":"…","step":3,"phase":"act","actions":2,
+ "model":"ui-tars-1.5-7b","tokens_in":1240,"cost_usd":0.00016,
+ "screenshot_sha":"a3f9…","latency_ms":1450,"result":"ok"}</pre>
+  <ul>
+    <li><strong>JSONL por tarea</strong> + <strong>screenshots por paso</strong> (JPEG).</li>
+    <li><strong>Evidencia</strong> descargable en <code>.zip</code> (para video y debrief).</li>
+    <li>Redacción automática de <code>password</code>, <code>Bearer</code>, <code>OPENROUTER_API_KEY</code>.</li>
+  </ul>
+
+  <h3>1.11 · Trade-offs (qué descartamos y por qué)</h3>
+  <table>
+    <tr><th>Decisión</th><th>Elegido</th><th>Alternativa descartada</th><th>Por qué</th></tr>
+    <tr><td>Transporte</td><td><code>asyncvnc</code> + puente WS↔RFB</td><td>Playwright sobre el canvas noVNC</td><td>más capas (browser→canvas→JS→websockify), más lento, y no da acceso al DOM real</td></tr>
+    <tr><td>Agente</td><td>híbrido plan + batched act</td><td>ReAct puro (una acción por llamada)</td><td>3× más llamadas → más tokens y más tiempo en los 5 min</td></tr>
+    <tr><td>Coordenadas</td><td>normalizadas 0–1</td><td>píxeles absolutos</td><td>se rompen si cambia la resolución del escritorio</td></tr>
+    <tr><td>Cola</td><td>asyncio en memoria (1 proceso)</td><td>SQS + Lambda</td><td>el WS VNC vive 5 min y el cold start come presupuesto; no necesitamos escala</td></tr>
+    <tr><td>Verificación</td><td>cascada hash → OCR → LLM</td><td>LLM visión para todo</td><td>10× más caro por cada check</td></tr>
+  </table>
 </section>
 
 <!-- ===================== ARQUITECTURA ===================== -->
@@ -309,25 +330,6 @@
     <div class="cap">Vista de despliegue: un contenedor expuesto a internet, que habla con el escritorio (wss) y con OpenRouter (https).</div>
   </div>
 
-  <h3>2.5 · Observabilidad</h3>
-  <p>Cada paso genera una línea <strong>JSONL</strong> (trazable, barata, redacta secretos):</p>
-  <pre>{"ts":"…","task_id":"…","step":3,"phase":"act","actions":2,
- "model":"ui-tars-1.5-7b","tokens_in":1240,"cost_usd":0.00016,
- "screenshot_sha":"a3f9…","latency_ms":1450,"result":"ok"}</pre>
-  <ul>
-    <li><strong>JSONL por tarea</strong> + <strong>screenshots por paso</strong> (JPEG).</li>
-    <li><strong>Evidencia</strong> descargable en <code>.zip</code> (para video y debrief).</li>
-    <li>Redacción automática de <code>password</code>, <code>Bearer</code>, <code>OPENROUTER_API_KEY</code>.</li>
-  </ul>
-
-  <h3>2.6 · Trade-offs (qué descartamos y por qué)</h3>
-  <table>
-    <tr><th>Decisión</th><th>Elegido</th><th>Alternativa descartada</th><th>Por qué</th></tr>
-    <tr><td>Transporte</td><td><code>asyncvnc</code> + puente WS↔RFB</td><td>Playwright sobre el canvas noVNC</td><td>más capas (browser→canvas→JS→websockify), más lento, y no da acceso al DOM real</td></tr>
-    <tr><td>Agente</td><td>híbrido plan + batched act</td><td>ReAct puro (una acción por llamada)</td><td>3× más llamadas → más tokens y más tiempo en los 5 min</td></tr>
-    <tr><td>Coordenadas</td><td>normalizadas 0–1</td><td>píxeles absolutos</td><td>se rompen si cambia la resolución del escritorio</td></tr>
-    <tr><td>Cola</td><td>asyncio en memoria (1 proceso)</td><td>SQS + Lambda</td><td>el WS VNC vive 5 min y el cold start come presupuesto; no necesitamos escala</td></tr>
-    <tr><td>Verificación</td><td>cascada hash → OCR → LLM</td><td>LLM visión para todo</td><td>10× más caro por cada check</td></tr>
   </table>
 </section>
 

@@ -1,6 +1,6 @@
 # Fase 1 — Síntesis: `src/desktop/` (I/O VNC)
 
-## Qué se realizó
+## 1. Resumen
 
 Se construyó la capa de entrada/salida hacia el escritorio remoto, refactorizando los spikes
 (`spikes/bridge_test.py`, `spikes/input_test.py`) en un módulo limpio y reutilizable:
@@ -11,7 +11,7 @@ Se construyó la capa de entrada/salida hacia el escritorio remoto, refactorizan
 | `capture.py` | `screenshot()`, `wait_and_capture()` |
 | `input.py` | `click()`, `press_key()`, `select_all()`, `type_text()`, `wait_ms()` |
 
-## Qué cambió respecto a antes
+## 2. Estado Anterior vs. Actual
 
 - **Antes:** código de prueba ad-hoc en `spikes/` que construía la URL a mano y usaba
   `async with asyncvnc.connect(...)` directamente.
@@ -20,7 +20,7 @@ Se construyó la capa de entrada/salida hacia el escritorio remoto, refactorizan
   - `normalize_url()` normaliza cualquier URL de entrada.
   - `click()` encapsula el timing de pulsación.
 
-## Decisiones de diseño (y por qué)
+## 3. Decisiones Técnicas
 
 1. **`asyncvnc` + puente WebSocket, no Playwright.**
    El escritorio solo expone `wss://…/websockify` (el puerto 5900 no está abierto, verificado

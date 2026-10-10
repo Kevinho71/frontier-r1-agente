@@ -18,11 +18,11 @@ y lo opera **solo con píxeles** (prohibido el DOM), como lo haría un empleado 
 
 - ✅ **Fase 1** `src/desktop/` — conexión VNC + input (click ≥100ms) + capture con wait.
 - ✅ **Fase 2** `src/vision/` — crop/downscale, diff por hash/píxeles, OCR barato.
-- ⬜ **Fase 3** `src/model/` — router de modelos + cliente OpenRouter + prompts.
+- ✅ **Fase 3** `src/model/` — router por capacidad + cliente OpenRouter (retry/429→agotado) + prompts.
 - ⬜ Fase 4 `agent/`, Fase 5 `api/store/queue`, Fase 6 `logs/`, Fase 7 deploy.
 
 **Plan maestro:** `docs/plan_implementacion.md` (contiene credenciales → NO commitear).
-**Síntesis por fase:** `docs/fase_1_desktop.md`, `docs/fase_2_vision.md`.
+**Síntesis por fase:** `docs/fase_1_desktop.md`, `docs/fase_2_vision.md`, `docs/fase_3_model.md`.
 
 ## Entorno (cómo correr)
 
@@ -41,7 +41,7 @@ PYTHONPATH=src python ...          # el código vive en src/
 ```
 src/desktop/   I/O: connect(url,pwd) [context manager], screenshot, click, type, select_all
 src/vision/    percepción barata: crop_region, downscale, changed, diff_fraction, extract_text
-src/model/     (F3) router por capacidad + cliente OpenRouter con retry/429→agotado
+src/model/     router por capacidad (registry+router) + cliente OpenRouter (client) + prompts
 src/agent/     (F4) loop híbrido plan→act(batch)→check, con resumen formato exacto
 src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 ```
@@ -61,6 +61,8 @@ src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 - Contra el escritorio: conectar, capturar, OCR, diffs (ver scripts en `spikes/`).
 - Oráculo dev: `POST /__reset` y `POST /__check` (endpoints del escritorio, Bearer con token).
 - Pruebas oficiales E1–E5 en `frontier-reto-1/pruebas/` (gitignored, son material).
+- Tests de `model/`: `PYTHONPATH=src python -m unittest tests.test_model -v` (sin red).
+- Verificar IDs del catálogo contra OpenRouter (necesita `OPENROUTER_API_KEY`): `PYTHONPATH=src python spikes/model_test.py`.
 
 ## Reglas de commit
 

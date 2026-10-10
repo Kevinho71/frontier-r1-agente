@@ -17,6 +17,15 @@ class RouterTest(unittest.TestCase):
     def test_select_primario(self):
         self.assertEqual(select(Capability.PLAN), "deepseek/deepseek-v4-flash")
 
+    def test_check_usa_modelo_json(self):
+        # ling-3.0-flash-vl devuelve vacío con json_object → CHECK debe usar qwen
+        self.assertEqual(CANDIDATES[Capability.CHECK][0], "qwen/qwen3-vl-30b-a3b-instruct")
+        self.assertNotIn("inclusionai/ling-3.0-flash-vl", CANDIDATES[Capability.CHECK])
+
+    def test_ground_primario_qwen(self):
+        # ui-tars devuelve coords en píxeles y apunta mal → qwen es el primario
+        self.assertEqual(CANDIDATES[Capability.GROUND][0], "qwen/qwen3-vl-30b-a3b-instruct")
+
     def test_select_ground_fallback_al_exhausted(self):
         first = CANDIDATES[Capability.GROUND][0]
         mark_exhausted(first)

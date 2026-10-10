@@ -6,5 +6,7 @@ TAREA:
 HITO A VERIFICAR:
 {{milestone}}
 
+Responde "ok": true SOLO si en la captura VES claramente que el hito está cumplido. Si aún no se ve cumplido (por ejemplo, sigues en el menú de inicio o en una pantalla previa), responde "ok": false y describe lo que ves.
+
 Responde SOLO con JSON en este formato:
-{"ok": true, "description": "qué ves en la pantalla que confirma o refuta el hito"}
+{"ok": false, "description": "qué ves en la pantalla que confirma o refuta el hito"}

@@ -21,9 +21,20 @@ def normalize_key(key: str) -> str:
 
 
 def normalize_coords(x, y, width: int, height: int) -> tuple[int, int]:
-    """Convierte coords normalizadas 0-1 a píxeles, clampadas al viewport."""
-    px = max(0, min(width - 1, int(float(x) * width)))
-    py = max(0, min(height - 1, int(float(y) * height)))
+    """Convierte coords a píxeles, aceptando normalizadas 0-1 o píxeles absolutos.
+
+    Los modelos de grounding son inconsistentes: a veces devuelven fracciones
+    (0.15) y a veces píxeles (156). Se auto-detecta: valor en [-1.5, 1.5] se
+    interpreta como fracción; si no, como píxel absoluto. Luego se clamp.
+    """
+    def conv(v, size: int) -> int:
+        f = float(v)
+        if -1.5 <= f <= 1.5:
+            return int(f * size)
+        return int(f)
+
+    px = max(0, min(width - 1, conv(x, width)))
+    py = max(0, min(height - 1, conv(y, height)))
     return px, py
 
 

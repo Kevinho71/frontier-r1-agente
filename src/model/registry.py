@@ -19,13 +19,21 @@ class Capability(Enum):
 
 
 # candidatos ordenados por preferencia (primario primero, luego fallbacks)
+# Nota: CHECK usa qwen (soporta json_object); ling-3.0-flash-vl devuelve vacío
+# con response_format=json_object, por eso quedó SOLO para OCR (json_mode=False).
+# GROUND usa qwen primero: ui-tars-1.5-7b devuelve coords en píxeles (no 0-1) y
+# apunta al menú equivocado; se mantiene como último fallback barato.
 CANDIDATES: dict[Capability, list[str]] = {
     Capability.PLAN: ["deepseek/deepseek-v4-flash"],
     Capability.GROUND: [
-        "bytedance/ui-tars-1.5-7b",
         "qwen/qwen3-vl-30b-a3b-instruct",
+        "qwen/qwen3-vl-235b-a22b-instruct",
+        "bytedance/ui-tars-1.5-7b",
     ],
-    Capability.CHECK: ["inclusionai/ling-3.0-flash-vl"],
+    Capability.CHECK: [
+        "qwen/qwen3-vl-30b-a3b-instruct",
+        "qwen/qwen3-vl-235b-a22b-instruct",
+    ],
     Capability.HARD: [
         "qwen/qwen3-vl-30b-a3b-instruct",
         "qwen/qwen3-vl-235b-a22b-instruct",

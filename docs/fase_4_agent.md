@@ -80,3 +80,8 @@ Se añadió el prompt `model/prompts/answer.txt` (extracción de respuesta) y se
   detección de homónimos de E5 (claves `52345678` / `1019876543`) que hoy depende de la calidad del
   grounding/check por visión.
 - `logs/` (JSONL + artefactos) consumirá `agent.redact` y el `TaskResult.cost_usd`.
+
+> **Actualización (post-prueba en vivo):** tras la primera ejecución real se corrigieron cuatro
+> causas raíz (falso `done`, `ling` sin JSON, coords en píxeles, `check` como única fuente de
+> verdad). Ver **`docs/fase_4_hotfix_grounding.md`**. Queda pendiente la **precisión del grounding**
+> (los modelos no ubican texto a nivel de píxel); bloqueante actual para pasar E1–E5.

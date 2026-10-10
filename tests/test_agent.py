@@ -21,8 +21,13 @@ class ActionsTest(unittest.TestCase):
     def test_normalize_coords(self):
         self.assertEqual(normalize_coords(0.5, 0.25, 1280, 800), (640, 200))
 
+    def test_normalize_coords_absolutos(self):
+        self.assertEqual(normalize_coords(129, 29, 1280, 800), (129, 29))
+        self.assertEqual(normalize_coords(156, 47, 1280, 800), (156, 47))
+
     def test_normalize_coords_clamp(self):
         self.assertEqual(normalize_coords(1.5, -0.5, 1280, 800), (1279, 0))
+        self.assertEqual(normalize_coords(99999, 99999, 1280, 800), (1279, 799))
 
 
 class SummarizeTest(unittest.TestCase):

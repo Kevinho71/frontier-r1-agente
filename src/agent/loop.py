@@ -31,8 +31,9 @@ async def run_task(
 ) -> TaskResult:
     """Ejecuta una tarea sobre el escritorio remoto y devuelve estado + resumen.
 
-    Cortes: timeout de 5 min (reservando ~30s para el resumen), max_steps, y
-    estancamiento (3 pantallas iguales). Nunca deja la conexión VNC abierta.
+    La compleción de cada hito la decide `check()` (verificación por visión),
+    nunca el modelo de grounding. Cortes: timeout de 5 min (reservando ~30s para
+    el resumen), max_steps, y estancamiento (3 pantallas iguales).
     """
     secrets = [desktop_password]
     t0 = time.monotonic()
@@ -48,7 +49,7 @@ async def run_task(
             if not hitos:
                 hitos = [task]
 
-            done = False
+            task_done = True
             reason = ""
             last_frame = None
             last_sig = None
@@ -57,8 +58,12 @@ async def run_task(
             for hito in hitos:
                 if remaining() <= 0:
                     reason = "tiempo agotado"
+                    task_done = False
                     break
+
+                hito_ok = False
                 attempts = 0
+                stall = 0
                 while attempts < MAX_ATTEMPTS_PER_MILESTONE:
                     if remaining() <= 0:
                         reason = "tiempo agotado"
@@ -76,22 +81,28 @@ async def run_task(
                     stall = stall + 1 if sig == last_sig else 0
                     last_sig = sig
 
-                    if act_res.done:
-                        done = True
-                        break
                     if stall >= 3:
                         reason = "pantalla sin cambios"
                         break
+
+                    if act_res.actions_executed == 0:
+                        attempts += 1
+                        continue
 
                     chk = await check(client, task, hito, act_res.frame_after)
                     cost += chk.cost_usd
                     steps += 1
                     if chk.ok:
-                        done = True
+                        hito_ok = True
                         break
                     attempts += 1
 
-                if done or reason:
+                if reason:
+                    task_done = False
+                    break
+                if not hito_ok:
+                    reason = f"no se pudo completar el hito: {hito}"
+                    task_done = False
                     break
 
             # Para preguntas, el "éxito" es extraer la respuesta, no un cambio de UI.
@@ -102,14 +113,14 @@ async def run_task(
                 except Exception:
                     answer = None
                 if answer is not None:
-                    done = True
+                    task_done = True
                     reason = ""
                 else:
-                    done = False
+                    task_done = False
                     if not reason:
                         reason = "no se pudo determinar la respuesta"
 
-            estado = "terminada" if done else "fallida"
+            estado = "terminada" if task_done else "fallida"
             resumen = format_summary(
                 task,
                 estado=estado,

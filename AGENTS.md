@@ -23,7 +23,7 @@ y lo opera **solo con píxeles** (prohibido el DOM), como lo haría un empleado 
 - ⬜ Fase 5 `api/store/queue`, Fase 6 `logs/`, Fase 7 deploy.
 
 **Plan maestro:** `docs/plan_implementacion.md` (contiene credenciales → NO commitear).
-**Síntesis por fase:** `docs/fase_1_desktop.md`, `docs/fase_2_vision.md`, `docs/fase_3_model.md`, `docs/fase_4_agent.md`.
+**Síntesis por fase:** `docs/fase_1_desktop.md`, `docs/fase_2_vision.md`, `docs/fase_3_model.md`, `docs/fase_4_agent.md`, `docs/fase_4_hotfix_grounding.md`.
 
 ## Entorno (cómo correr)
 
@@ -55,6 +55,9 @@ src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 - **`click` mantiene ≥150ms** porque el servidor ignora clics <100ms.
 - **`wait_and_capture` espera ≥1s** porque el repintado tarda hasta 1s.
 - **Umbral de diff 0.1%** (`changed`) porque un dropdown cambia ~0.25% pero el "sin cambio" da 0.0.
+- **`check()` decide el avance, no el grounding** (el `done` auto-reportado del modelo era falso; ver `docs/fase_4_hotfix_grounding.md`).
+- **CHECK/GROUND con `qwen3-vl-30b`** (`ling` no soporta `json_object`; `ui-tars` devuelve coords en píxeles y apunta mal).
+- **Grounding impreciso (pendiente):** los modelos de visión no ubican texto a nivel de píxel; próxima iteración = búsqueda + verificación con OCR.
 - **Contenedor persistente** (Fly.io/Railway), no Lambda (el WS VNC vive 5 min; cold-start come presupuesto).
 
 ## Cómo verificar

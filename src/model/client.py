@@ -173,7 +173,11 @@ async def chat(
             async with httpx.AsyncClient(timeout=timeout) as client:
                 resp = await client.post(OPENROUTER_URL, json=payload, headers=_headers(api_key))
             if resp.status_code == 200:
-                return _parse(resp.json(), model)
+                result = _parse(resp.json(), model)
+                if json_mode and result.parsed is None:
+                    last_err = LLMError(f"{model}: respuesta sin JSON válido", retryable=True)
+                else:
+                    return result
             if resp.status_code == 429:
                 if not _retryable(_safe_json(resp)):
                     mark_exhausted(model)

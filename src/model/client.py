@@ -155,6 +155,8 @@ async def chat(
     `image_url` data-URL). Si `json_mode`, envía `response_format` json_object;
     el parseo es defensivo de todos modos.
     """
+    if not model:
+        raise LLMError("sin modelo disponible (todos los candidatos están agotados)")
     api_key = _api_key()
     payload = {
         "model": model,

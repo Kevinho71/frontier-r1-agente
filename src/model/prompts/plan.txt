@@ -1,11 +1,12 @@
-Eres un operador de un sistema de gestión legacy. Solo puedes ver la pantalla (píxeles); no tienes acceso al DOM, al HTML ni a la URL. Opera como lo haría un empleado nuevo que mira la pantalla y razona qué hay que hacer.
+Eres un operador de un sistema de gestión legacy. No tienes acceso al DOM ni a la URL; solo razonas sobre el texto visible que se te da y la tarea, como lo haría un empleado nuevo.
 
 TAREA:
 {{task}}
 
-Captura de pantalla actual (adjunta).
+Texto visible actual de la pantalla (OCR):
+{{context}}
 
-Descubre la interfaz mirando la captura (menús, botones, formularios, listados). Descompón la tarea en hitos de alto nivel, sin coordenadas ni acciones concretas. Cada hito debe ser verificable por separado.
+Descompón la tarea en hitos de alto nivel, sin coordenadas ni acciones concretas. Cada hito debe ser verificable por separado.
 
 Responde SOLO con JSON en este formato:
 {"plan": ["hito 1", "hito 2", "..."]}

@@ -3,294 +3,260 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reto 1 · Agente que opera lo que no tiene API — Diseño de Sistema</title>
+<title>Reto 1 · Diseño y Arquitectura — Agente que opera lo que no tiene API</title>
 <style>
-  :root{
-    --bg:#0d1117; --panel:#161b22; --panel2:#1c2431; --border:#30363d;
-    --text:#e6edf3; --muted:#9aa7b4; --accent:#58a6ff; --accent2:#3fb950;
-    --warn:#d29922; --danger:#f85149;
-  }
+  :root{--ink:#111;--muted:#444;--line:#bbb;--line2:#888}
   *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:1080px;margin:0 auto;padding:40px 32px 80px}
-  header{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px}
-  h1{font-size:30px;margin:0 0 8px;letter-spacing:-.5px}
-  h1 .accent{color:var(--accent)}
+  body{margin:0;background:#fff;color:var(--ink);
+    font-family:Georgia,'Times New Roman',serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:44px 28px 90px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:8px}
+  h1{font-size:31px;margin:0 0 8px;letter-spacing:-.3px}
   .sub{color:var(--muted);font-size:15px;margin:0}
-  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--border);
-    color:var(--accent);font-size:12px;padding:2px 10px;border-radius:20px;margin:12px 8px 0 0}
-  h2{font-size:20px;margin:40px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-  h2 .num{color:var(--accent);margin-right:8px;font-variant-numeric:tabular-nums}
+  .meta{color:var(--muted);font-size:12.5px;margin-top:14px}
+  .meta span{display:inline-block;margin-right:18px}
+
+  /* secciones grandes */
+  .part{margin-top:46px}
+  .part>.head{border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:18px}
+  .part>.head .kicker{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+  .part>.head h2{font-size:26px;margin:2px 0 0}
+
+  h3{font-size:17px;margin:28px 0 8px}
   p{margin:8px 0}
   .muted{color:var(--muted)}
-  code,pre{font-family:"SF Mono",ui-monospace,Consolas,monospace}
-  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:13px}
-  pre{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 16px;
-    overflow:auto;font-size:12.5px;line-height:1.55}
+  code,pre{font-family:"SF Mono",Consolas,'Courier New',monospace}
+  code{background:#f4f4f4;border:1px solid #e2e2e2;padding:1px 6px;border-radius:3px;font-size:13px}
+  pre{background:#fafafa;border:1px solid var(--line);border-radius:5px;padding:13px 15px;
+    overflow:auto;font-size:12.5px;line-height:1.5}
+
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  @media(max-width:760px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
-  .card h3{margin:0 0 10px;font-size:15px;color:var(--accent)}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+  .card{border:1px solid var(--line);border-radius:5px;padding:16px 18px}
+  .card h4{margin:0 0 8px;font-size:15px}
   .card ul{margin:0;padding-left:18px}
   .card li{margin:5px 0;font-size:14px}
+
   table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0}
-  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
-  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
-  .pill{font-size:11px;padding:1px 8px;border-radius:10px;font-weight:600}
-  .ok{background:#12351c;color:var(--accent2)} .warn{background:#33260a;color:var(--warn)}
-  .bad{background:#3a1618;color:var(--danger)}
-  .diagram{margin:20px 0;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px}
-  .diagram svg{width:100%;height:auto;display:block}
-  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
-  .flow .step{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{border-bottom:2px solid var(--ink);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+
+  .flow{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:14px 0}
+  .flow .step{border:1px solid var(--line2);border-radius:4px;padding:6px 11px;font-size:13px}
   .flow .arrow{color:var(--muted)}
-  .kpi{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}
-  .kpi div{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;text-align:center}
-  .kpi .v{font-size:22px;font-weight:700;color:var(--accent2)}
-  .kpi .l{font-size:12px;color:var(--muted)}
-  footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:12.5px}
-  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+
+  .diagram{margin:18px 0;border:1px solid var(--line);border-radius:5px;padding:10px;background:#fff}
+  .diagram img{width:100%;height:auto;display:block}
+
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
+  .kpi div{border:1px solid var(--line);border-radius:5px;padding:11px 17px;text-align:center;min-width:120px}
+  .kpi .v{font-size:21px;font-weight:700}
+  .kpi .l{font-size:11.5px;color:var(--muted)}
+
+  .note{border-left:3px solid var(--ink);background:#f7f7f7;padding:10px 14px;margin:16px 0;font-size:14px}
+
+  footer{margin-top:46px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+  a{color:#0000cc;text-decoration:none} a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <h1>El agente que opera lo que <span class="accent">no tiene API</span></h1>
-  <p class="sub">Sistema de gestión sin documentación ni proveedor · controlado por un agente de visión sobre un escritorio remoto, únicamente con píxeles.</p>
-  <span class="tag">Frontier Lab · Reto 1</span>
-  <span class="tag">Systems Design · 30%</span>
-  <span class="tag">Python · asyncio</span>
+  <h1>El agente que opera lo que no tiene API</h1>
+  <p class="sub">Sistema legacy sin documentación ni proveedor, controlado por un agente de visión sobre un escritorio remoto — únicamente con píxeles.</p>
+  <div class="meta">
+    <span>Frontier Lab · Reto 1</span>
+    <span>Systems Design</span>
+    <span>Python 3.12 · asyncio</span>
+  </div>
 </header>
 
-<h2><span class="num">1.</span>Problema</h2>
-<p>Un sistema legacy de 15 años, sin API, sin documentación y sin proveedor. Todo se opera a mano. Se necesita un
-<strong>agente que aprenda a usarlo como un empleado nuevo</strong> y ejecute tareas en lenguaje natural, incluso nunca vistas antes.
-Hay <strong>5 sistemas</strong> como este, así que el agente debe adaptarse a cualquiera.</p>
-<div class="grid">
-  <div class="card">
-    <h3>Restricciones</h3>
-    <ul>
-      <li>Sin herramientas/proveedores que hagan esto por nosotros (solo LLM por API).</li>
-      <li>Las apps se acceden <strong>igual que la de pruebas</strong>: por el escritorio noVNC.</li>
-      <li><strong>No se puede ver el DOM</strong> — solo la pantalla (píxeles).</li>
-    </ul>
+<!-- ===================== DISEÑO ===================== -->
+<section class="part">
+  <div class="head">
+    <div class="kicker">Sección 1</div>
+    <h2>DISEÑO</h2>
   </div>
-  <div class="card">
-    <h3>El pivote central</h3>
-    <ul>
-      <li><code>observe()</code>: de <em>leer el DOM</em> → <strong>capturar el framebuffer</strong>.</li>
-      <li><code>act()</code>: de <em>selectores</em> → <strong>coordenadas + teclado</strong>.</li>
-      <li>El reto de verdad: <strong>grounding</strong> — traducir una intención a un píxel, sin estructura.</li>
-    </ul>
+  <p class="muted">El <em>qué</em> y el <em>por qué</em>: el problema, el enfoque y las decisiones de comportamiento del agente.</p>
+
+  <h3>1.1 · Problema</h3>
+  <p>Un sistema de gestión de 15 años, sin API, sin documentación y sin proveedor. Todo se opera a mano:
+  clics, formularios, ventanas emergentes, reportes exportados uno por uno. Se necesita un
+  <strong>agente que aprenda a usarlo como un empleado nuevo</strong> y ejecute tareas en lenguaje natural,
+  incluso las que nunca ha visto. Hay <strong>5 sistemas</strong> como este: el agente debe adaptarse a cualquiera.</p>
+
+  <h3>1.2 · Restricciones y pivote central</h3>
+  <div class="grid">
+    <div class="card">
+      <h4>Restricciones</h4>
+      <ul>
+        <li>Sin herramientas ni proveedores que hagan esto por nosotros (solo LLM por API).</li>
+        <li>Las apps se acceden <strong>igual que la de pruebas</strong>: por el escritorio noVNC.</li>
+        <li><strong>No se puede ver el DOM</strong> — solo la pantalla (píxeles).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>El pivote</h4>
+      <ul>
+        <li><code>observe()</code>: de <em>leer el DOM</em> → <strong>capturar el framebuffer</strong>.</li>
+        <li><code>act()</code>: de <em>selectores</em> → <strong>coordenadas + teclado</strong>.</li>
+        <li>El reto real: <strong>grounding</strong> — traducir una intención a un píxel, sin estructura.</li>
+      </ul>
+    </div>
   </div>
-</div>
 
-<h2><span class="num">2.</span>Arquitectura</h2>
-<div class="diagram">
-<svg viewBox="0 0 1200 620" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Arial">
-  <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" fill="#58a6ff"/>
-    </marker>
-  </defs>
-  <style>
-    .box{fill:#1c2431;stroke:#30363d;rx:8px}
-    .title{fill:#e6edf3;font-size:15px;font-weight:700}
-    .sub{fill:#9aa7b4;font-size:11.5px}
-    .lbl{fill:#58a6ff;font-size:12px;font-weight:600}
-    .edge{stroke:#58a6ff;stroke-width:1.6;fill:none;marker-end:url(#arr)}
-    .edgeg{stroke:#3fb950;stroke-width:1.6;fill:none;marker-end:url(#arr)}
-  </style>
-
-  <!-- JUEZ -->
-  <rect class="box" x="20" y="20" width="180" height="70"/>
-  <text class="title" x="110" y="48" text-anchor="middle">JUEZ</text>
-  <text class="sub" x="110" y="68" text-anchor="middle">Bearer · eval</text>
-
-  <!-- API -->
-  <rect class="box" x="20" y="150" width="260" height="150"/>
-  <text class="title" x="150" y="178" text-anchor="middle">SERVICIO HTTP</text>
-  <text class="sub" x="150" y="196" text-anchor="middle">FastAPI · un contenedor</text>
-  <text class="lbl" x="40" y="222">GET  /health → 200</text>
-  <text class="lbl" x="40" y="242">POST /tasks → 202 {task_id} (&lt;2s)</text>
-  <text class="lbl" x="40" y="262">GET  /tasks/{id} → {estado, resumen}</text>
-  <text class="sub" x="40" y="286">auth Bearer · cola asyncio + workers</text>
-
-  <!-- Queue -->
-  <rect class="box" x="330" y="150" width="160" height="70"/>
-  <text class="title" x="410" y="180" text-anchor="middle">COLA</text>
-  <text class="sub" x="410" y="200" text-anchor="middle">asyncio.Queue</text>
-
-  <!-- Store -->
-  <rect class="box" x="330" y="260" width="160" height="60"/>
-  <text class="title" x="410" y="288" text-anchor="middle">STORE</text>
-  <text class="sub" x="410" y="306" text-anchor="middle">SQLite · estado</text>
-
-  <!-- Worker -->
-  <rect class="box" x="540" y="110" width="300" height="240"/>
-  <text class="title" x="690" y="138" text-anchor="middle">WORKER (por tarea · ≤5 min)</text>
-  <text class="sub" x="690" y="156" text-anchor="middle">loop: plan → observe → act → check</text>
-
-  <rect class="box" x="560" y="175" width="260" height="40"/>
-  <text class="title" x="690" y="200" text-anchor="middle">Desktop I/O</text>
-  <text class="sub" x="610" y="240" text-anchor="middle">asyncvnc + puente WS↔RFB</text>
-
-  <rect class="box" x="560" y="215" width="260" height="40"/>
-  <text class="title" x="690" y="240" text-anchor="middle">Percepción</text>
-  <text class="sub" x="610" y="240" text-anchor="middle" font-size="10.5px">crop/zoom · diff · OCR</text>
-
-  <rect class="box" x="560" y="260" width="260" height="40"/>
-  <text class="title" x="690" y="285" text-anchor="middle">Cognición</text>
-  <text class="sub" x="610" y="305" text-anchor="middle">PLAN / ACT(batch) / CHECK</text>
-
-  <rect class="box" x="560" y="305" width="260" height="30"/>
-  <text class="title" x="690" y="325" text-anchor="middle">Modelos (OpenRouter)</text>
-
-  <!-- Desktop -->
-  <rect class="box" x="920" y="110" width="250" height="180"/>
-  <text class="title" x="1045" y="138" text-anchor="middle">ESCRITORIO REMOTO</text>
-  <text class="sub" x="1045" y="156" text-anchor="middle">noVNC · websockify · VNC</text>
-  <rect class="box" x="940" y="170" width="210" height="100"/>
-  <text class="title" x="1045" y="195" text-anchor="middle">App legacy</text>
-  <text class="sub" x="1045" y="215" text-anchor="middle">SIGECOM (y 5 más)</text>
-  <text class="sub" x="1045" y="235" text-anchor="middle">framebuffer 1280×800</text>
-  <text class="sub" x="1045" y="255" text-anchor="middle">solo píxeles · sin DOM</text>
-
-  <!-- Logs -->
-  <rect class="box" x="540" y="380" width="300" height="60"/>
-  <text class="title" x="690" y="406" text-anchor="middle">OBSERVABILIDAD</text>
-  <text class="sub" x="690" y="426" text-anchor="middle">JSONL por tarea + screenshots → evidencia</text>
-
-  <!-- edges -->
-  <path class="edge" d="M200 90 L200 150"/>
-  <text class="sub" x="210" y="126" font-size="10">Bearer token</text>
-  <path class="edge" d="M280 195 L330 195"/>
-  <path class="edge" d="M150 300 L150 330 L330 330 L330 290"/>
-  <path class="edge" d="M490 185 L540 185"/>
-  <path class="edge" d="M840 200 L920 200"/>
-  <path class="edgeg" d="M840 225 L920 225"/>
-  <text class="sub" x="852" y="218" font-size="10" fill="#3fb950">capture()/input()</text>
-  <path class="edge" d="M690 350 L690 380"/>
-</svg>
-</div>
-
-<h2><span class="num">3.</span>Flujo secuencial</h2>
-<div class="flow">
-  <span class="step">POST /tasks</span><span class="arrow">→</span>
-  <span class="step">validar + task_id</span><span class="arrow">→</span>
-  <span class="step">encolar (202)</span><span class="arrow">→</span>
-  <span class="step">worker conecta VNC</span><span class="arrow">→</span>
-  <span class="step">PLAN</span><span class="arrow">→</span>
-  <span class="step">ACT(batch)/pantalla</span><span class="arrow">→</span>
-  <span class="step">CHECK</span><span class="arrow">→</span>
-  <span class="step">resumen + estado</span>
-</div>
-<div class="grid">
-  <div class="card">
-    <h3>PLAN (1 llamada, al inicio)</h3>
-    <p class="muted" style="margin:0">Pantalla inicial + tarea → plan de alto nivel en hitos (sin coordenadas). Guardado como contexto persistente.</p>
-    <pre>{"plan": ["Navegar a Ventas","Abrir reporte","Exportar CSV"]}</pre>
+  <h3>1.3 · Comportamiento del agente (híbrido)</h3>
+  <p>Tres fases que minimizan llamadas al modelo — la palanca de costo y latencia.</p>
+  <div class="flow">
+    <span class="step">PLAN</span><span class="arrow">→</span>
+    <span class="step">ACT (batch por pantalla)</span><span class="arrow">→</span>
+    <span class="step">CHECK (verificar)</span>
   </div>
-  <div class="card">
-    <h3>ACT por pantalla (batching)</h3>
-    <p class="muted" style="margin:0">Una llamada por <em>cambio de pantalla</em>, no por clic. El modelo devuelve una lista de acciones a ejecutar antes de volver a observar.</p>
-    <pre>{"actions":[{"op":"click","x":0.12,"y":0.06},
+  <div class="grid">
+    <div class="card">
+      <h4>PLAN · 1 llamada al inicio</h4>
+      <p class="muted" style="margin:0">Pantalla inicial + tarea → plan de alto nivel en hitos (sin coordenadas). Se guarda como contexto persistente.</p>
+      <pre>{"plan": ["Navegar a Ventas", "Abrir reporte", "Exportar CSV"]}</pre>
+    </div>
+    <div class="card">
+      <h4>ACT · batching</h4>
+      <p class="muted" style="margin:0">Una llamada por <em>cambio de pantalla</em>, no por clic. El modelo devuelve una lista de acciones a ejecutar antes de volver a observar.</p>
+      <pre>{"actions":[{"op":"click","x":0.12,"y":0.06},
  {"op":"type","text":"oct"},{"op":"wait","ms":800}],
  "stop_if_changed":true}</pre>
+    </div>
   </div>
-</div>
-<div class="card" style="margin-top:20px">
-  <h3>Verificación en cascada (barato → caro)</h3>
-  <p class="muted" style="margin:0">1) <strong>diff de imagen</strong> (hash de región) → 2) <strong>OCR</strong> (modelo barato) → 3) <strong>LLM visión</strong> solo si los anteriores fallan. Así cada check cuesta lo mínimo.</p>
-</div>
-
-<h2><span class="num">4.</span>Zoom / recorte inteligente</h2>
-<div class="grid">
-  <div class="card">
-    <h3>Por qué</h3>
-    <p class="muted" style="margin:0">Cada screenshot cuesta tokens. Enviar 1.6M píxeles a cada paso agota los $50 y los 5 minutos.</p>
+  <div class="card" style="margin-top:16px">
+    <h4>CHECK · verificación en cascada (barato → caro)</h4>
+    <p class="muted" style="margin:0">1) <strong>diff de imagen</strong> (hash de región) → 2) <strong>OCR</strong> (modelo barato) → 3) <strong>LLM visión</strong> solo si los anteriores fallan. Así cada verificación cuesta lo mínimo.</p>
   </div>
-  <div class="card">
-    <h3>Cómo</h3>
-    <ul>
-      <li><strong>Ventana de atención</strong> alrededor de la zona de interacción (≈400×300 → <strong>~12× menos tokens</strong>).</li>
-      <li>Pantalla nueva → <strong>full downscaled</strong> (~800px) para orientación.</li>
-      <li>Texto chico → <strong>crop de detalle</strong> para legibilidad.</li>
-    </ul>
+
+  <h3>1.4 · Zoom / recorte inteligente</h3>
+  <div class="grid">
+    <div class="card">
+      <h4>Por qué</h4>
+      <p class="muted" style="margin:0">Cada screenshot cuesta tokens. Enviar 1.6 Mpx en cada paso agota los $50 y los 5 minutos.</p>
+    </div>
+    <div class="card">
+      <h4>Cómo</h4>
+      <ul>
+        <li><strong>Ventana de atención</strong> alrededor de la zona de interacción (~400×300 → <strong>~12× menos tokens</strong>).</li>
+        <li>Pantalla nueva → <strong>full downscaled</strong> (~800px) para orientación.</li>
+        <li>Texto chico → <strong>crop de detalle</strong> para legibilidad.</li>
+      </ul>
+    </div>
   </div>
-</div>
 
-<h2><span class="num">5.</span>Routing de modelos (3 niveles)</h2>
-<table>
-  <tr><th>Rol</th><th>Modelo</th><th>Precio ($/M)</th><th>Por qué</th></tr>
-  <tr><td><strong>PLAN</strong> (razonamiento)</td><td><code>deepseek-v4.1-flash</code></td><td>0.11 / 0.34</td><td>texto, barato, planea hitos</td></tr>
-  <tr><td><strong>GROUND</strong> (coordenadas)</td><td><code>bytedance/ui-tars-1.5-7b</code></td><td>0.10 / 0.20</td><td>modelo GUI: mira y devuelve el punto</td></tr>
-  <tr><td><strong>CHECK</strong> (verificar/OCR)</td><td><code>inclusionai/ling-3.0-flash-vl</code></td><td>0.021 / 0.062</td><td>visión dirt-cheap, alto volumen</td></tr>
-  <tr><td><strong>HARD</strong> (pantallas difíciles)</td><td><code>qwen3-vl-235b-a22b</code></td><td>0.21 / 1.90</td><td>fallback cuando lo barato falla</td></tr>
-</table>
-<p class="muted">Regla de cuota: ante 429 se marca el modelo como <em>agotado</em> y se excluye del routing el resto del día. Retry/backoff + jitter.</p>
+  <h3>1.5 · Routing de modelos (3 niveles)</h3>
+  <table>
+    <tr><th>Rol</th><th>Modelo</th><th>Precio ($/M)</th><th>Por qué</th></tr>
+    <tr><td><strong>PLAN</strong> (razonamiento)</td><td><code>deepseek-v4.1-flash</code></td><td>0.11 / 0.34</td><td>texto, barato, planea hitos</td></tr>
+    <tr><td><strong>GROUND</strong> (coordenadas)</td><td><code>bytedance/ui-tars-1.5-7b</code></td><td>0.10 / 0.20</td><td>modelo GUI: mira y devuelve el punto</td></tr>
+    <tr><td><strong>CHECK</strong> (verificar/OCR)</td><td><code>inclusionai/ling-3.0-flash-vl</code></td><td>0.021 / 0.062</td><td>visión barata, alto volumen</td></tr>
+    <tr><td><strong>HARD</strong> (pantallas difíciles)</td><td><code>qwen3-vl-235b-a22b</code></td><td>0.21 / 1.90</td><td>fallback cuando lo barato falla</td></tr>
+  </table>
+  <p class="muted">Regla de cuota: ante 429 el modelo se marca <em>agotado</em> y se excluye el resto del día. Retry/backoff + jitter.</p>
 
-<h2><span class="num">6.</span>Presupuesto de los 5 minutos</h2>
-<div class="kpi">
-  <div><div class="v">~10s</div><div class="l">Conexión VNC</div></div>
-  <div><div class="v">~15s</div><div class="l">PLAN inicial</div></div>
-  <div><div class="v">~200s</div><div class="l">ACT ×4–6 pantallas</div></div>
-  <div><div class="v">~40s</div><div class="l">CHECK + resumen</div></div>
-  <div><div class="v">~35s</div><div class="l">Reserva / imprevistos</div></div>
-</div>
-<p class="muted">Cortes: <code>timeout ≤ 5 min</code> y <code>max_steps ≤ 25</code>, el que llegue primero. Se reservan ~30s para escribir el resumen.</p>
+  <h3>1.6 · Presupuesto de los 5 minutos</h3>
+  <div class="kpi">
+    <div><div class="v">~10s</div><div class="l">Conexión VNC</div></div>
+    <div><div class="v">~15s</div><div class="l">PLAN inicial</div></div>
+    <div><div class="v">~200s</div><div class="l">ACT ×4–6 pantallas</div></div>
+    <div><div class="v">~40s</div><div class="l">CHECK + resumen</div></div>
+    <div><div class="v">~35s</div><div class="l">Reserva</div></div>
+  </div>
+  <p class="muted">Cortes: <code>timeout ≤ 5 min</code> y <code>max_steps ≤ 25</code>, el que llegue primero. Se reservan ~30s para el resumen.</p>
 
-<h2><span class="num">7.</span>Manejo de excepciones</h2>
-<table>
-  <tr><th>Situación</th><th>Detección</th><th>Respuesta</th></tr>
-  <tr><td>Pantalla no cambió</td><td>hash igual al previo</td><td>reintentar 1× con otro enfoque, luego re-plan</td></tr>
-  <tr><td>Popup / modal inesperado</td><td><code>stop_if_changed</code></td><td>cortar batch, re-observar con el modal visible</td></tr>
-  <tr><td>Estancamiento</td><td>3 pantallas iguales</td><td>forzar re-plan desde cero</td></tr>
-  <tr><td>Coordenadas fuera de rango</td><td>clamp + warning</td><td>pedir coords corregidas al modelo</td></tr>
-  <tr><td>Tiempo restante &lt; 30s</td><td>deadline</td><td>resumen parcial + <span class="pill warn">terminada</span>/<span class="pill bad">fallida</span></td></tr>
-  <tr><td>Red/VNC caído</td><td>excepción socket</td><td>reconectar, 2 reintentos, luego fallida</td></tr>
-</table>
+  <h3>1.7 · Manejo de excepciones</h3>
+  <table>
+    <tr><th>Situación</th><th>Detección</th><th>Respuesta</th></tr>
+    <tr><td>Pantalla no cambió</td><td>hash igual al previo</td><td>reintentar 1× con otro enfoque, luego re-plan</td></tr>
+    <tr><td>Popup / modal inesperado</td><td><code>stop_if_changed</code></td><td>cortar batch, re-observar con el modal visible</td></tr>
+    <tr><td>Estancamiento</td><td>3 pantallas iguales</td><td>forzar re-plan desde cero</td></tr>
+    <tr><td>Coordenadas fuera de rango</td><td>clamp + warning</td><td>pedir coords corregidas</td></tr>
+    <tr><td>Tiempo restante &lt; 30s</td><td>deadline</td><td>resumen parcial + <code>terminada</code>/<code>fallida</code></td></tr>
+    <tr><td>Red/VNC caído</td><td>excepción socket</td><td>reconectar, 2 reintentos, luego fallida</td></tr>
+  </table>
 
-<h2><span class="num">8.</span>Observabilidad</h2>
-<p>Cada paso genera una línea <strong>JSONL</strong> (trazable, barata, redacta secretos):</p>
-<pre>{"ts":"…","task_id":"…","step":3,"phase":"act","actions":2,
+  <h3>1.8 · Métricas de éxito</h3>
+  <div class="grid">
+    <div class="card"><ul>
+      <li><strong>Costo por tarea</strong> ($ tokens).</li>
+      <li><strong>Tasa de éxito</strong> (terminada vs fallida).</li>
+      <li><strong>Pasos por tarea</strong> (eficiencia del batching).</li>
+    </ul></div>
+    <div class="card"><ul>
+      <li><strong>Latencia de pantalla</strong> (shot → acción).</li>
+      <li><strong>Grounding accuracy</strong> (coords a &lt;20px del target).</li>
+      <li><strong>Reconexiones / errores</strong> por tarea.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ===================== ARQUITECTURA ===================== -->
+<section class="part">
+  <div class="head">
+    <div class="kicker">Sección 2</div>
+    <h2>ARQUITECTURA</h2>
+  </div>
+  <p class="muted">El <em>cómo se conecta</em>: los componentes del sistema y el flujo de datos entre ellos.</p>
+
+  <div class="diagram">
+    <img src="architecture.svg" alt="Diagrama de arquitectura del agente computer-use">
+  </div>
+
+  <h3>2.1 · Componentes</h3>
+  <table>
+    <tr><th>Módulo</th><th>Responsabilidad</th><th>Entrada</th><th>Salida</th></tr>
+    <tr><td><code>api/</code></td><td>HTTP + auth Bearer + cola</td><td><code>POST /tasks</code></td><td><code>202 {task_id}</code> / <code>GET /tasks/{id}</code></td></tr>
+    <tr><td><code>store/</code></td><td>persistencia de tareas</td><td><code>task_id</code></td><td><code>{estado, resumen, …}</code></td></tr>
+    <tr><td><code>queue/</code></td><td>cola de tareas en memoria</td><td><code>task_id</code></td><td>despacho a worker</td></tr>
+    <tr><td><code>desktop/</code></td><td>conexión VNC + puente WS↔RFB</td><td>URL + password</td><td><code>capture()</code>, <code>input()</code></td></tr>
+    <tr><td><code>vision/</code></td><td>crop, diff, OCR barato</td><td>framebuffer RGBA</td><td>región recortada, hash, texto</td></tr>
+    <tr><td><code>model/</code></td><td>routing + llamadas OpenRouter</td><td>mensajes + imágenes</td><td>JSON estructurado</td></tr>
+    <tr><td><code>agent/</code></td><td>loop plan→act→check</td><td>tarea NL + desktop</td><td>estado final + resumen</td></tr>
+    <tr><td><code>logs/</code></td><td>observabilidad</td><td>paso ejecutado</td><td>línea JSONL + artefacto</td></tr>
+  </table>
+
+  <h3>2.2 · Transporte al escritorio (validado)</h3>
+  <div class="note">
+    El escritorio solo expone <code>wss://…/websockify</code> (el puerto 5900 no está abierto). El agente habla RFB
+    a través de un <strong>puente</strong>: abre el WebSocket con subprotocolo <code>binary</code> y le presenta a
+    <code>asyncvnc</code> un stream reader/writer. Probado sobre el escritorio real: framebuffer 1280×800,
+    screenshot ~1s, coordenadas 1:1 con input VNC.
+  </div>
+
+  <h3>2.3 · Deployment</h3>
+  <p>Un <strong>contenedor único</strong> (Fly.io / Railway) con FastAPI + pool de workers asyncio. Sin SQS ni Lambda:
+  el WebSocket VNC vive 5 min y el cold start de Lambda comería presupuesto. Base de tareas en SQLite sobre volumen.</p>
+
+  <h3>2.4 · Observabilidad</h3>
+  <p>Cada paso genera una línea <strong>JSONL</strong> (trazable, barata, redacta secretos):</p>
+  <pre>{"ts":"…","task_id":"…","step":3,"phase":"act","actions":2,
  "model":"ui-tars-1.5-7b","tokens_in":1240,"cost_usd":0.00016,
  "screenshot_sha":"a3f9…","latency_ms":1450,"result":"ok"}</pre>
-<ul>
-  <li><strong>JSONL por tarea</strong> + <strong>screenshots por paso</strong> (JPEG).</li>
-  <li><strong>Evidencia</strong> descargable en <code>.zip</code> (para video y debrief).</li>
-  <li>Redacción automática de <code>password</code>, <code>Bearer</code>, <code>OPENROUTER_API_KEY</code>.</li>
-</ul>
+  <ul>
+    <li><strong>JSONL por tarea</strong> + <strong>screenshots por paso</strong> (JPEG).</li>
+    <li><strong>Evidencia</strong> descargable en <code>.zip</code> (para video y debrief).</li>
+    <li>Redacción automática de <code>password</code>, <code>Bearer</code>, <code>OPENROUTER_API_KEY</code>.</li>
+  </ul>
 
-<h2><span class="num">9.</span>Trade-offs</h2>
-<table>
-  <tr><th>Decisión</th><th>Elegido</th><th>Alternativa descartada</th></tr>
-  <tr><td>Transporte</td><td><span class="pill ok">asyncvnc + puente</span></td><td>Playwright: más capas, más lento, sin ventaja</td></tr>
-  <tr><td>Agente</td><td>híbrido plan + batched act</td><td>ReAct puro: 3× más llamadas al modelo</td></tr>
-  <tr><td>Coordenadas</td><td>normalizadas 0–1</td><td>píxeles absolutos: se rompen si cambia resolución</td></tr>
-  <tr><td>Cola</td><td>asyncio en memoria</td><td>SQS+Lambda: complejidad innecesaria aquí</td></tr>
-  <tr><td>Verificación</td><td>cascada hash→OCR→LLM</td><td>LLM único: 10× más caro por check</td></tr>
-</table>
-
-<h2><span class="num">10.</span>Métricas de éxito</h2>
-<div class="grid">
-  <div class="card"><ul>
-    <li><strong>Costo por tarea</strong> ($ tokens).</li>
-    <li><strong>Tasa de éxito</strong> (terminada vs fallida).</li>
-    <li><strong>Pasos por tarea</strong> (eficiencia del batching).</li>
-  </ul></div>
-  <div class="card"><ul>
-    <li><strong>Latencia de pantalla</strong> (shot→acción).</li>
-    <li><strong>Grounding accuracy</strong> (coords a &lt;20px del target).</li>
-    <li><strong>Reconexiones / errores</strong> por tarea.</li>
-  </ul></div>
-</div>
+  <h3>2.5 · Trade-offs</h3>
+  <table>
+    <tr><th>Decisión</th><th>Elegido</th><th>Alternativa descartada</th></tr>
+    <tr><td>Transporte</td><td><code>asyncvnc</code> + puente</td><td>Playwright: más capas, más lento, sin ventaja</td></tr>
+    <tr><td>Agente</td><td>híbrido plan + batched act</td><td>ReAct puro: 3× más llamadas al modelo</td></tr>
+    <tr><td>Coordenadas</td><td>normalizadas 0–1</td><td>píxeles absolutos: se rompen si cambia resolución</td></tr>
+    <tr><td>Cola</td><td>asyncio en memoria</td><td>SQS+Lambda: complejidad innecesaria aquí</td></tr>
+    <tr><td>Verificación</td><td>cascada hash→OCR→LLM</td><td>LLM único: 10× más caro por check</td></tr>
+  </table>
+</section>
 
 <footer>
-  Frontier Lab · Reto 1 · Systems Design — Diseño preliminar del agente computer-use.
-  Decisiones validadas sobre el escritorio de pruebas real (framebuffer 1280×800, clic e input por VNC confirmados).
+  Frontier Lab · Reto 1 · Systems Design — diseño y arquitectura del agente computer-use.
+  Decisiones validadas sobre el escritorio de pruebas real (framebuffer 1280×800, captura y clic por VNC confirmados).
 </footer>
 
 </div>

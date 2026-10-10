@@ -56,17 +56,26 @@ def create_app(runner=run_task, log_dir: str | None = None) -> FastAPI:
             log.write("start", tarea=req.tarea)
             # El reloj del evaluador corre desde el POST: lo esperado en la cola se descuenta.
             waited = time.monotonic() - rec["t0"]
+            steps, cost = 0, 0.0
             try:
                 res = await asyncio.wait_for(
                     runner(req.tarea, req.escritorio.url, req.escritorio.password, timeout_s=max(60, int(TASK_TIMEOUT_S - waited))),
                     timeout=max(60.0, HARD_CAP_S - waited),
                 )
+                steps, cost = res.steps, res.cost_usd
                 rec.update(estado=res.estado, resumen=redact_text(res.resumen, secrets))
             except asyncio.TimeoutError:
                 rec.update(estado="fallida", resumen="Tarea: tiempo agotado (5 min); se detuvo el trabajo.")
             except Exception as exc:  # nunca dejar la tarea en 'en_curso' para siempre
                 rec.update(estado="fallida", resumen=redact_text(f"Error en la tarea: {exc}", secrets))
-            log.write("end", estado=rec["estado"], resumen=rec["resumen"])
+            log.write(
+                "end",
+                estado=rec["estado"],
+                duration_s=round(time.monotonic() - rec["t0"], 1),
+                steps=steps,
+                cost_usd=round(cost, 5),
+                resumen=rec["resumen"],
+            )
 
     @app.get("/health")
     async def health():

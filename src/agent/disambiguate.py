@@ -21,6 +21,7 @@ class Resolution:
     cols: list[str] = field(default_factory=list)
     pages: int = 1
     complete: bool = True  # False si no se pudo recorrer todo el listado
+    n_rows: int = 0  # filas transcritas en total
 
     @property
     def ambiguous(self) -> bool:
@@ -58,7 +59,10 @@ def _merge(results):
 
 async def resolve_record(task: str, frame, *, next_page=None, max_pages: int = 6, can_continue=lambda: True) -> Resolution:
     """Candidatos del listado que encajan con la tarea (todas las páginas que se puedan recorrer)."""
-    results = [await _ask_table(task, frame, "table_full")]
+    first = await _ask_table(task, frame, "table_full")
+    if not first[1]:  # transcripción vacía: reintento único (un fallo del modelo no debe parecer "no existe")
+        first = await _ask_table(task, frame, "table_full")
+    results = [first]
     pages = 1
     complete = True
     while next_page is not None:
@@ -72,12 +76,12 @@ async def resolve_record(task: str, frame, *, next_page=None, max_pages: int = 6
         pages += 1
     cols, rows = _merge(results)
     if not rows:
-        return Resolution([], cols, pages, complete)
+        return Resolution([], cols, pages, complete, 0)
     ids = list(dict.fromkeys(await _match_ids(task, cols, rows)))
     by_id = {r[0]: r for r in rows}
     cands = [by_id[i] for i in ids if i in by_id]
     trace("disambiguate", paginas=pages, filas=len(rows), candidatos=[c[0] for c in cands])
-    return Resolution(cands, cols, pages, complete)
+    return Resolution(cands, cols, pages, complete, len(rows))
 
 
 def describe_row(cols, row) -> str:

@@ -416,7 +416,7 @@ class DisambiguateTest(unittest.IsolatedAsyncioTestCase):
     async def test_sin_tabla_sin_candidatos(self):
         from agent.disambiguate import resolve_record
 
-        self._patch([([], [])], ids=[])
+        self._patch([([], []), ([], [])], ids=[])
         res = await resolve_record("t", object())
         self.assertEqual(res.candidates, [])
         self.assertFalse(res.ambiguous)
@@ -513,6 +513,56 @@ class ScreenshotReconnectTest(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(ValueError):
             await screenshot(C())
+
+
+class PlanRejectTest(unittest.TestCase):
+    def test_parse_rejection(self):
+        from agent.plan import parse_rejection
+
+        self.assertEqual(parse_rejection({"plan": [], "rechazo": "borrado masivo"}), "borrado masivo")
+        self.assertEqual(parse_rejection({"plan": [], "rechazo": None}), "")
+        self.assertEqual(parse_rejection({"rechazo": "null"}), "")
+        self.assertEqual(parse_rejection(None), "")
+
+
+class NotFoundTest(unittest.IsolatedAsyncioTestCase):
+    async def test_sin_coincidencias_y_completo(self):
+        import agent.disambiguate as dis
+
+        async def fake_table(task, frame, prompt_name="table"):
+            return (["Código", "Nombre"], [["C1", "Otro"]])
+
+        async def fake_ids(task, cols, rows):
+            return []
+
+        orig = (dis._ask_table, dis._match_ids)
+        dis._ask_table, dis._match_ids = fake_table, fake_ids
+        self.addCleanup(lambda: setattr(dis, "_ask_table", orig[0]))
+        self.addCleanup(lambda: setattr(dis, "_match_ids", orig[1]))
+        res = await dis.resolve_record("t", object())
+        self.assertEqual(res.candidates, [])
+        self.assertTrue(res.complete)
+        self.assertEqual(res.n_rows, 1)
+
+    async def test_transcripcion_vacia_reintenta_una_vez(self):
+        import agent.disambiguate as dis
+
+        calls = []
+
+        async def fake_table(task, frame, prompt_name="table"):
+            calls.append(1)
+            return ([], []) if len(calls) == 1 else (["Código"], [["C1"]])
+
+        async def fake_ids(task, cols, rows):
+            return ["C1"]
+
+        orig = (dis._ask_table, dis._match_ids)
+        dis._ask_table, dis._match_ids = fake_table, fake_ids
+        self.addCleanup(lambda: setattr(dis, "_ask_table", orig[0]))
+        self.addCleanup(lambda: setattr(dis, "_match_ids", orig[1]))
+        res = await dis.resolve_record("t", object())
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(res.unique[0], "C1")
 
 
 if __name__ == "__main__":

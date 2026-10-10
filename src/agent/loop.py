@@ -14,7 +14,7 @@ from .act import ActState, act
 from .check import check
 from .disambiguate import ambiguity_reason, resolve_record, describe_row
 from .pager import Pager
-from .plan import plan
+from .plan import TaskRejected, plan
 from .redact import redact_text
 from .summarize import extract_answer, format_summary, is_question
 from .trace import dump_frame, trace
@@ -159,6 +159,8 @@ async def run_task(
                             elif res.ambiguous:
                                 reason = ambiguity_reason(hito.locate, res)
                                 trace("ambiguo", reason=reason)
+                            elif not res.candidates and res.complete:
+                                reason = f'No se encontró ningún registro que coincida con "{hito.locate}"; no se modificó nada.'
                             elif res.candidates and not res.complete:
                                 reason = (
                                     f'No se pudo recorrer todo el listado para confirmar que "{hito.locate}" sea único '
@@ -215,5 +217,8 @@ async def run_task(
             )
             return TaskResult(estado, resumen, steps, cost)
 
+    except TaskRejected as exc:
+        resumen = format_summary(task, estado="fallida", reason=f"{exc}. No se modificó nada.", steps=steps, cost_usd=sum(costs), secrets=secrets)
+        return TaskResult("fallida", resumen, steps, sum(costs))
     except Exception as exc:
         return TaskResult("fallida", redact_text(f"Error en la tarea: {exc}", secrets), steps, sum(costs))

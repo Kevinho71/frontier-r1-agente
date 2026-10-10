@@ -1,0 +1,16 @@
+Una tarea se refiere a UN registro existente de un sistema de gestión, identificado por un nombre y, quizá, otros datos. Tienes las filas que aparecen en el listado tras buscarlo. Decide qué filas podrían ser el registro al que se refiere la tarea.
+
+TAREA:
+{{task}}
+
+Reglas:
+- El nombre debe coincidir exactamente con el que cita la tarea (ignora mayúsculas y acentos). Un nombre con palabras extra o sufijos NO coincide.
+- Si la tarea trae otros datos que identifican el registro (ciudad, NIT, código, teléfono actual, etc.), descarta las filas que los contradicen. Los valores que la tarea quiere ESTABLECER o CAMBIAR (el dato nuevo) no sirven para identificar: ignóralos.
+- Si tras aplicar todo lo anterior quedan varias filas, devuélvelas todas: nada permite elegir una. No adivines ni elijas la primera.
+- Devuelve el identificador (primera columna) de cada fila candidata, exactamente como aparece.
+
+TABLA (columnas separadas por " | "):
+{{table}}
+
+Devuelve SOLO JSON:
+{"ids":["ID-1","ID-2"]}

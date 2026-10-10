@@ -5,8 +5,8 @@ PREGUNTA:
 
 Reglas:
 - Evalúa cada fila por separado, comparando cada condición con la columna correspondiente.
-- Los nombres deben coincidir exactamente: "Ferretería Ruiz e Hijos" o "Ferretería Ruiz S.A.S." NO son "Ferretería Ruiz" (son otros registros homónimos).
-- Un estado debe coincidir con el pedido ("Vencida" no es "Pendiente" ni "Pagada").
+- Los nombres deben coincidir exactamente: un nombre con sufijo o palabras extra ("Acme e Hijos", "Acme S.A.S.") NO es "Acme" (es otro registro homónimo).
+- Un estado debe coincidir con el pedido literalmente (un estado distinto, aunque parecido, no cuenta).
 - Devuelve el identificador (primera columna) de CADA fila que cumple, exactamente como aparece.
 
 TABLA (columnas separadas por " | "):

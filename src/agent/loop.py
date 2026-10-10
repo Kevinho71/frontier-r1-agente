@@ -11,11 +11,12 @@ from vision.locate import detect_elements
 
 from .act import ActState, act
 from .check import check
+from .disambiguate import ambiguity_reason, resolve_record, describe_row
 from .pager import Pager
 from .plan import plan
 from .redact import redact_text
 from .summarize import extract_answer, format_summary, is_question
-from .trace import trace
+from .trace import dump_frame, trace
 from .types import Milestone, TaskResult
 
 DEFAULT_TIMEOUT_S = 300
@@ -63,6 +64,7 @@ async def run_task(
             prefetched = None
             det_task = None
             feedback = ""
+            carry_hint = ""
 
             for hito in hitos:
                 if remaining() <= 0:
@@ -73,7 +75,8 @@ async def run_task(
                 hito_ok = False
                 attempts = 0
                 stall = 0
-                feedback = ""
+                feedback = carry_hint
+                carry_hint = ""
                 trace("hito", text=hito.text, expected=hito.expected)
                 while attempts < MAX_ATTEMPTS_PER_MILESTONE:
                     if remaining() <= 0:
@@ -99,6 +102,7 @@ async def run_task(
                         history.append(act_res.description)
                     steps += 1
                     last_frame = act_res.frame_after
+                    dump_frame(act_res.frame_after, "act")
 
                     sig = frame_signature(act_res.frame_after)
                     stall = stall + 1 if sig == last_sig else 0
@@ -122,6 +126,30 @@ async def run_task(
                     feedback = chk.description
                     if chk.ok:
                         hito_ok = True
+                        if hito.locate:
+                            pager = Pager(client, act_res.frame_after, det_task)
+                            try:
+                                res = await resolve_record(
+                                    f"{task}\n(Registro a localizar: {hito.locate})",
+                                    act_res.frame_after,
+                                    next_page=pager.next,
+                                    can_continue=lambda: remaining() > 45,
+                                )
+                            except Exception as exc:
+                                trace("disambiguate.error", err=repr(exc))
+                                res = None
+                            cost += pager.cost
+                            if pager.moved:
+                                await pager.back()
+                                prefetched = None  # la pantalla pudo cambiar: act() captura de nuevo
+                            if res is not None and res.ambiguous:
+                                reason = ambiguity_reason(hito.locate, res)
+                                trace("ambiguo", reason=reason)
+                            elif res is not None and res.unique:
+                                carry_hint = (
+                                    f"Registro objetivo ya identificado en el listado: {describe_row(res.cols, res.unique)}. "
+                                    f"Ábrelo con el enlace o identificador '{res.unique[0]}' de su fila."
+                                )
                         break
                     attempts += 1
 

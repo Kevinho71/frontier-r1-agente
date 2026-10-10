@@ -5,4 +5,4 @@ Para cada elemento devuelve [texto, x1, y1, x2, y2] con la caja en coordenadas r
 Para un campo de entrada o un dropdown, usa su etiqueta visible asociada como texto (o su valor actual si es un dropdown, p. ej. "Todos") y pon la caja sobre el CAMPO (donde se escribe o se despliega), no sobre la etiqueta.
 
 Responde SOLO con JSON en este formato:
-{"items":[["Archivo",10,45,40,70],["Buscar",270,150,326,174]]}
+{"items":[["Menú A",10,45,40,70],["Aplicar",270,150,326,174]]}

@@ -17,7 +17,7 @@ Acciones disponibles:
 
 Reglas:
 - Devuelve SIEMPRE al menos una acción que haga avanzar hacia el hito (por ejemplo, clicar el menú o botón correspondiente). Nunca devuelvas una lista de acciones vacía.
-- La pantalla suele tener una barra de menú arriba (Archivo, Comercial, Cartera, Herramientas, Ayuda): para navegar, haz clic en el elemento que corresponda al hito.
+- La pantalla suele tener una barra o panel de navegación con menús: para navegar, haz clic en el elemento cuyo nombre corresponda al hito.
 - Antes de tipear en un campo que ya tiene texto, incluye "select_all" justo antes del "type".
 - Tras cada clic que probablemente cambie la pantalla, incluye un "wait".
 - Agrupa en batch todas las acciones que puedas hacer sin volver a mirar la pantalla.

@@ -94,9 +94,9 @@ def _clean_table(parsed) -> tuple[list[str], list[list[str]]]:
     return cols, rows
 
 
-async def _ask_table(task: str, frame) -> tuple[list[str], list[list[str]]]:
+async def _ask_table(task: str, frame, prompt_name: str = "table") -> tuple[list[str], list[list[str]]]:
     """Transcribe la tabla visible (columnas, filas). Solo lectura: el filtrado se hace aparte."""
-    prompt = load_prompt("table", task=task)
+    prompt = load_prompt(prompt_name, task=task)
     res = await chat_vision(
         prompt,
         frame,

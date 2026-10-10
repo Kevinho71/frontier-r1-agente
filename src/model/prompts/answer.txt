@@ -5,7 +5,7 @@ PREGUNTA:
 
 Clasifica la pregunta:
 - "conteo": pide cuántos registros cumplen algo. NO cuentes tú: lista en "filas" el identificador (primera columna, p. ej. el código) de CADA fila visible que cumpla TODAS las condiciones de la pregunta (comprueba las columnas: cliente, estado, fechas...). Ignora las filas que no cumplen. Si la pantalla muestra un total o contador explícito de los resultados filtrados ("N registros", "Total: N"), ponlo en "total_visible".
-  Coincidencia exacta de nombres: "Ferretería Ruiz e Hijos" o "Ferretería Ruiz S.A.S." NO son "Ferretería Ruiz" (son otros registros homónimos): no los incluyas.
+  Coincidencia exacta de nombres: un nombre con sufijo o palabras extra ("Acme e Hijos", "Acme S.A.S.") NO es "Acme" (es otro registro homónimo): no lo incluyas.
 - "dato": pide un valor concreto (un teléfono, un estado, un monto...). Ponlo en "respuesta" (si es un número, solo el número, sin unidades).
 
 Indica en "hay_mas_paginas" si el listado parece tener más páginas (botón "Siguiente"/"Next" habilitado, "Página 1 de N", etc.). Las páginas siguientes las recorre el sistema; tú solo lista las filas de esta captura.

@@ -34,7 +34,7 @@ def reset_desktop():
 
 
 async def main():
-    task = sys.argv[1] if len(sys.argv) > 1 else "¿Cuántas facturas vencidas tiene Ferretería Ruiz?"
+    task = sys.argv[1] if len(sys.argv) > 1 else "Cuántos registros hay en el listado principal?"
     if "--reset" in sys.argv:
         reset_desktop()
     result = await run_task(task, URL, PWD, timeout_s=300, max_steps=40, reserve_s=30)

@@ -36,17 +36,17 @@ class ActionsTest(unittest.TestCase):
 
 class SummarizeTest(unittest.TestCase):
     def test_is_question_signo(self):
-        self.assertTrue(is_question("¿Cuántas facturas vencidas tiene Ferretería Ruiz?"))
+        self.assertTrue(is_question("¿Cuántas órdenes atrasadas tiene Acme?"))
 
     def test_is_question_palabra(self):
-        self.assertTrue(is_question("cuántas facturas vencidas"))
+        self.assertTrue(is_question("cuántas órdenes atrasadas"))
 
     def test_is_not_question(self):
-        self.assertFalse(is_question("Registra al cliente Papelería Los Andes"))
+        self.assertFalse(is_question("Registra al cliente Café Central"))
 
     def test_format_summary_con_respuesta(self):
         res = format_summary(
-            "¿Cuántas facturas?",
+            "¿Cuántas órdenes?",
             estado="terminada",
             answer="45",
             steps=4,
@@ -75,16 +75,16 @@ class RedactTest(unittest.TestCase):
 
 class LocateTest(unittest.TestCase):
     def test_normalize_text(self):
-        self.assertEqual(normalize_text("Papelería"), "papeleria")
-        self.assertEqual(normalize_text("  Cartera "), "cartera")
+        self.assertEqual(normalize_text("Café"), "cafe")
+        self.assertEqual(normalize_text("  Menú B "), "menu b")
 
     def test_find_element_exact(self):
-        els = [Element("Archivo", 40, 50), Element("Cartera", 205, 50)]
-        self.assertEqual(find_element(els, "Cartera").x, 205)
+        els = [Element("Menú A", 40, 50), Element("Menú B", 205, 50)]
+        self.assertEqual(find_element(els, "Menú B").x, 205)
 
     def test_find_element_fuzzy(self):
-        els = [Element("Papelería Los Andes", 100, 100)]
-        self.assertEqual(find_element(els, "papeleria").x, 100)
+        els = [Element("Café Central", 100, 100)]
+        self.assertEqual(find_element(els, "cafe").x, 100)
 
     def test_find_element_none(self):
         self.assertIsNone(find_element([Element("A", 1, 1)], "zzz"))
@@ -97,15 +97,15 @@ class LocateTest(unittest.TestCase):
 
 
 class Scale1000Test(unittest.TestCase):
-    """Verificado contra la pantalla real 1280x800 (spikes/captures/facturas.png)."""
+    """Verificado contra la pantalla real 1280x800 (spikes/captures)."""
 
     def test_scale_for(self):
         self.assertEqual(scale_for("qwen/qwen3-vl-235b-a22b-instruct"), 1000)
         self.assertEqual(scale_for("qwen/qwen3-vl-30b-a3b-instruct"), 1000)
         self.assertIsNone(scale_for("qwen/qwen2.5-vl-72b-instruct"))
 
-    def test_buscar_0_1000(self):
-        # Buscar real: centro (382,130). Qwen3-VL lo reportó centrado en (298,162) sobre 1000.
+    def test_boton_0_1000(self):
+        # Botón real: centro (382,130). Qwen3-VL lo reportó centrado en (298,162) sobre 1000.
         self.assertEqual(_box_center([270, 150, 326, 174], 1280, 800, 1000), (381, 129))
 
     def test_anterior_y_bajo(self):
@@ -115,7 +115,7 @@ class Scale1000Test(unittest.TestCase):
 
     def test_parse_item_formas(self):
         self.assertEqual(parse_item({"text": "A", "box": [1, 2, 3, 4]}), ("A", [1, 2, 3, 4]))
-        self.assertEqual(parse_item(["Buscar", 270, 150, 326, 174]), ("Buscar", [270, 150, 326, 174]))
+        self.assertEqual(parse_item(["Aplicar", 270, 150, 326, 174]), ("Aplicar", [270, 150, 326, 174]))
         self.assertEqual(parse_item("x"), ("", []))
 
     def test_fraccion_pese_a_escala(self):
@@ -162,13 +162,13 @@ class PaginatedCountTest(unittest.IsolatedAsyncioTestCase):
 
     @staticmethod
     def _page(prefix, n):
-        return (["Código", "Estado"], [[f"{prefix}{i}", "Vencida"] for i in range(n)])
+        return (["Código", "Estado"], [[f"{prefix}{i}", "Atrasada"] for i in range(n)])
 
     def test_is_count_question(self):
         from agent.summarize import is_count_question
 
-        self.assertTrue(is_count_question("¿Cuántas facturas vencidas tiene Ferretería Ruiz?"))
-        self.assertFalse(is_count_question("¿Cuánto cuesta la factura FV-1?"))
+        self.assertTrue(is_count_question("¿Cuántas órdenes atrasadas tiene Acme?"))
+        self.assertFalse(is_count_question("¿Cuánto cuesta la orden OR-1?"))
 
     async def test_tres_paginas(self):
         self._patch([self._page("A", 20), self._page("B", 20), self._page("C", 5)])
@@ -177,7 +177,7 @@ class PaginatedCountTest(unittest.IsolatedAsyncioTestCase):
         async def nxt():
             return next(frames, None)
 
-        self.assertEqual(await extract_answer("¿Cuántas facturas?", object(), next_page=nxt), "45")
+        self.assertEqual(await extract_answer("¿Cuántas órdenes?", object(), next_page=nxt), "45")
 
     async def test_una_pagina_sin_control(self):
         self._patch([self._page("A", 3)])
@@ -284,9 +284,9 @@ class TypeIdempotentTest(unittest.IsolatedAsyncioTestCase):
 
 class PlanParseTest(unittest.TestCase):
     def test_parse_plan_dict(self):
-        hs = parse_plan({"plan": [{"hito": "Abrir Facturas", "pantalla_esperada": "Título Facturas"}]})
-        self.assertEqual(hs[0].text, "Abrir Facturas")
-        self.assertEqual(hs[0].expected, "Título Facturas")
+        hs = parse_plan({"plan": [{"hito": "Abrir Órdenes", "pantalla_esperada": "Título Órdenes"}]})
+        self.assertEqual(hs[0].text, "Abrir Órdenes")
+        self.assertEqual(hs[0].expected, "Título Órdenes")
 
     def test_parse_plan_strings_legacy(self):
         hs = parse_plan({"plan": ["a", "b"]})
@@ -301,9 +301,9 @@ class PlanParseTest(unittest.TestCase):
 class ElementResolveTest(unittest.TestCase):
     def setUp(self):
         self.els = [
-            Element("Clientes", 100, 50),
+            Element("Sujetos", 100, 50),
             Element("Cliente", 300, 200),
-            Element("Buscar", 500, 200),
+            Element("Aplicar", 500, 200),
         ]
 
     def test_puntuacion_ignorada(self):
@@ -312,20 +312,20 @@ class ElementResolveTest(unittest.TestCase):
 
     def test_campo_no_se_confunde_con_menu(self):
         self.assertEqual(find_element(self.els, "Cliente:").x, 300)
-        self.assertEqual(find_element(self.els, "Clientes").x, 100)
+        self.assertEqual(find_element(self.els, "Sujetos").x, 100)
 
     def test_parcial_prefiere_longitud_cercana(self):
-        els = [Element("Facturas pendientes de cobro", 1, 1), Element("Facturas", 2, 2)]
-        self.assertEqual(find_element(els, "factura").x, 2)
+        els = [Element("Órdenes pendientes de cobro", 1, 1), Element("Órdenes", 2, 2)]
+        self.assertEqual(find_element(els, "orden").x, 2)
 
     def test_resolve_por_indice(self):
         self.assertEqual(resolve_element(self.els, 2, "Cliente").x, 300)
 
     def test_resolve_indice_incoherente_manda_texto(self):
-        self.assertEqual(resolve_element(self.els, 1, "Buscar").x, 500)
+        self.assertEqual(resolve_element(self.els, 1, "Aplicar").x, 500)
 
     def test_resolve_indice_invalido_usa_texto(self):
-        self.assertEqual(resolve_element(self.els, 99, "Buscar").x, 500)
+        self.assertEqual(resolve_element(self.els, 99, "Aplicar").x, 500)
         self.assertIsNone(resolve_element(self.els, "x", ""))
 
     def test_sort_elements_orden_lectura(self):
@@ -333,8 +333,89 @@ class ElementResolveTest(unittest.TestCase):
         self.assertEqual([e.text for e in sort_elements(els)], ["a", "b", "c"])
 
     def test_describe_actions(self):
-        d = describe_actions([{"op": "click_text", "text": "Cartera"}, {"op": "wait", "ms": 800}])
-        self.assertEqual(d, 'clic "Cartera"')
+        d = describe_actions([{"op": "click_text", "text": "Menú B"}, {"op": "wait", "ms": 800}])
+        self.assertEqual(d, 'clic "Menú B"')
+
+
+class DisambiguateTest(unittest.IsolatedAsyncioTestCase):
+    COLS = ["Código", "Nombre", "Documento", "Ciudad"]
+
+    def _patch(self, pages, ids):
+        import agent.disambiguate as dis
+
+        it = iter(pages)
+
+        async def fake_table(task, frame, prompt_name="table"):
+            return next(it)
+
+        async def fake_ids(task, cols, rows):
+            return ids(rows) if callable(ids) else ids
+
+        orig = (dis._ask_table, dis._match_ids)
+        dis._ask_table, dis._match_ids = fake_table, fake_ids
+        self.addCleanup(lambda: setattr(dis, "_ask_table", orig[0]))
+        self.addCleanup(lambda: setattr(dis, "_match_ids", orig[1]))
+
+    def test_parse_plan_locate(self):
+        hs = parse_plan({"plan": [{"hito": "a", "localiza_registro": "Ana"}, {"hito": "b", "localiza_registro": ""}, "c"]})
+        self.assertEqual([h.locate for h in hs], ["Ana", "", ""])
+
+    def test_find_prev_control(self):
+        from agent.pager import find_prev_control
+
+        self.assertEqual(find_prev_control([Element("Anterior", 5, 5), Element("Siguiente", 9, 9)]).x, 5)
+        self.assertIsNone(find_prev_control([Element("Siguiente", 9, 9)]))
+
+    async def test_dos_candidatos_es_ambiguo(self):
+        from agent.disambiguate import ambiguity_reason, resolve_record
+
+        rows = [["C1", "Ana Torres", "52345678", "X"], ["C2", "Ana Torres", "1019876543", "Y"]]
+        self._patch([(self.COLS, rows)], ids=["C1", "C2"])
+        res = await resolve_record("t", object())
+        self.assertTrue(res.ambiguous)
+        reason = ambiguity_reason("Ana Torres", res)
+        self.assertIn("52345678", reason)
+        self.assertIn("1019876543", reason)
+        self.assertIn("No se modificó nada", reason)
+
+    async def test_un_candidato_es_unico(self):
+        from agent.disambiguate import resolve_record
+
+        rows = [["C1", "Ana Torres", "1", "X"], ["C2", "Ana Torres Gómez", "2", "Y"]]
+        self._patch([(self.COLS, rows)], ids=["C1"])
+        res = await resolve_record("t", object())
+        self.assertFalse(res.ambiguous)
+        self.assertEqual(res.unique[0], "C1")
+
+    async def test_ids_inventados_se_ignoran(self):
+        from agent.disambiguate import resolve_record
+
+        self._patch([(self.COLS, [["C1", "A", "1", "X"]])], ids=["C1", "ZZ"])
+        res = await resolve_record("t", object())
+        self.assertEqual([r[0] for r in res.candidates], ["C1"])
+
+    async def test_homonimo_en_otra_pagina(self):
+        from agent.disambiguate import resolve_record
+
+        p1 = (self.COLS, [["C1", "A", "1", "X"]])
+        p2 = (self.COLS, [["C2", "A", "2", "Y"]])
+        self._patch([p1, p2], ids=lambda rows: [r[0] for r in rows])
+        frames = iter([object()])
+
+        async def nxt():
+            return next(frames, None)
+
+        res = await resolve_record("t", object(), next_page=nxt)
+        self.assertTrue(res.ambiguous)
+        self.assertEqual(res.pages, 2)
+
+    async def test_sin_tabla_sin_candidatos(self):
+        from agent.disambiguate import resolve_record
+
+        self._patch([([], [])], ids=[])
+        res = await resolve_record("t", object())
+        self.assertEqual(res.candidates, [])
+        self.assertFalse(res.ambiguous)
 
 
 if __name__ == "__main__":

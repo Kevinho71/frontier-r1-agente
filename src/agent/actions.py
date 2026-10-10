@@ -53,7 +53,7 @@ def normalize_text(s: str) -> str:
 def find_element(elements, target: str):
     """Busca un elemento por etiqueta: exacta; si no, la substring más cercana en longitud.
 
-    Evita que "Cliente:" (campo) se confunda con "Clientes" (menú): la coincidencia
+    Evita que "Nombre:" (campo) se confunda con "Nombres" (menú): la coincidencia
     exacta gana, y entre parciales gana la etiqueta de longitud más parecida.
     """
     t = normalize_text(target)

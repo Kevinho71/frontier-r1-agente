@@ -9,14 +9,15 @@ Texto visible actual de la pantalla (OCR). Los menús desplegables y submenús N
 Descompón la tarea en hitos de alto nivel, sin coordenadas ni clics concretos. Cada hito debe poder verificarse mirando una captura.
 
 Reglas de planificación:
-1. Identifica la ENTIDAD OBJETIVO: lo que la tarea cuenta, consulta, crea, modifica o exporta (facturas, pedidos, clientes, ...). Navega al LISTADO o FORMULARIO de esa entidad.
-2. Los demás datos de la tarea (nombre de un cliente, estado, fechas, ciudad) son FILTROS o VALORES que se usan DENTRO de la pantalla de la entidad objetivo. No son lugares a los que navegar. Ejemplo de razonamiento: para "cuántas X tiene el cliente Y", la entidad objetivo es X; Y es un filtro del listado de X (no hay que abrir el módulo de Y).
+1. Identifica la ENTIDAD OBJETIVO: lo que la tarea cuenta, consulta, crea, modifica o exporta (los registros o documentos que maneja la app). Navega al LISTADO o FORMULARIO de esa entidad.
+2. Los demás datos de la tarea (nombre de un cliente, estado, fechas, ciudad) son FILTROS o VALORES que se usan DENTRO de la pantalla de la entidad objetivo. No son lugares a los que navegar. Ejemplo de razonamiento: para "cuántas X tiene el sujeto Y", la entidad objetivo es X; Y es un filtro del listado de X (no hay que abrir el módulo de Y).
 3. Solo navega al módulo de otra entidad si necesitas un dato que no puedes escribir directamente como filtro o valor.
 4. Un hito de navegación termina cuando se ve la PANTALLA DESTINO (su título o su formulario), no cuando solo se abrió un menú desplegable. Agrupa "abrir el menú y elegir la opción" en un solo hito.
 5. Los submenús no se ven, así que NO adivines en qué menú está cada módulo. El primer hito es "abrir el listado/pantalla de <entidad>" (sin nombrar un menú concreto salvo que su nombre ya diga la entidad); el operador explorará los menús hasta encontrarlo.
-6. Agrupa en UN solo hito todos los filtros o campos de un mismo formulario junto con el botón que los aplica (por ejemplo "filtrar por cliente X y estado Y y pulsar Buscar"). Cada hito cuesta una pasada completa de percepción: usa pocos hitos (normalmente 2 a 4).
+6. Agrupa en UN solo hito todos los filtros o campos de un mismo formulario junto con el botón que los aplica (por ejemplo "aplicar los filtros A=x y B=y y pulsar el botón que los aplica"). Cada hito cuesta una pasada completa de percepción: usa pocos hitos (normalmente 2 a 4).
 7. Si la tarea es una pregunta, el último hito es dejar en pantalla el listado ya filtrado con la respuesta; NO añadas un hito de "contar" o "leer": la lectura y el conteo (incluidas las páginas siguientes) se hacen automáticamente al terminar. Si la tarea modifica o exporta datos, el último hito es ejecutar la acción y confirmar que se guardó o se ejecutó.
-8. Para cada hito indica "pantalla_esperada": cómo se reconoce la pantalla o el estado al cumplirlo (título de sección, campos o filtros visibles, mensaje de confirmación).
+8. Si la tarea modifica o consulta UN registro existente por su nombre u otro dato, separa un hito propio "filtrar el listado para localizar <registro>" cuyo final es el listado ya filtrado a la vista, SIN abrir todavía ningún registro; en ese hito pon en "localiza_registro" la descripción del registro (nombre y datos que lo identifican); en los demás hitos déjalo como cadena vacía "". Abrirlo y editarlo va en hitos posteriores.
+9. Para cada hito indica "pantalla_esperada": cómo se reconoce la pantalla o el estado al cumplirlo (título de sección, campos o filtros visibles, mensaje de confirmación).
 
 Responde SOLO con JSON en este formato:
-{"plan": [{"hito": "...", "pantalla_esperada": "..."}, ...]}
+{"plan": [{"hito": "...", "pantalla_esperada": "...", "localiza_registro": ""}, ...]}

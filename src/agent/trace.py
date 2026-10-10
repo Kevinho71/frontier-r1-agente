@@ -15,6 +15,25 @@ def enabled() -> bool:
     return os.environ.get("RETO1_TRACE", "") not in ("", "0", "false")
 
 
+_DUMP_N = 0
+
+
+def dump_frame(frame, tag: str = "") -> None:
+    """Guarda el frame en RETO1_DUMP=<dir> (depuración; no contiene secretos del servicio)."""
+    global _DUMP_N
+    d = os.environ.get("RETO1_DUMP", "")
+    if not d:
+        return
+    try:
+        from PIL import Image
+
+        os.makedirs(d, exist_ok=True)
+        _DUMP_N += 1
+        Image.fromarray(frame).convert("RGB").save(os.path.join(d, f"{_DUMP_N:03d}_{tag}.png"))
+    except Exception:
+        pass
+
+
 def trace(event: str, **data) -> None:
     """Imprime una línea de traza en stderr si RETO1_TRACE está activo."""
     if not enabled():

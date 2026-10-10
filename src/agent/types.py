@@ -11,6 +11,7 @@ class Milestone:
 
     text: str
     expected: str = ""
+    locate: str = ""  # si no está vacío: este hito deja un listado filtrado donde hay que localizar UN registro
 
 
 @dataclass

@@ -11,6 +11,7 @@ from .actions import normalize_text
 from .trace import trace
 
 _NEXT_LABELS = ("siguiente", "next", "proxima", "pagina siguiente", "adelante")
+_PREV_LABELS = ("anterior", "previous", "prev", "pagina anterior", "atras")
 
 
 def find_next_control(elements):
@@ -18,6 +19,15 @@ def find_next_control(elements):
     for el in elements or []:
         t = normalize_text(el.text)
         if t and any(t == lab or t.startswith(lab) for lab in _NEXT_LABELS):
+            return el
+    return None
+
+
+def find_prev_control(elements):
+    """Elemento "página anterior" por etiqueta; None si no hay."""
+    for el in elements or []:
+        t = normalize_text(el.text)
+        if t and any(t == lab or t.startswith(lab) for lab in _PREV_LABELS):
             return el
     return None
 
@@ -32,6 +42,24 @@ class Pager:
         self.el = None
         self.looked = False
         self.cost = 0.0
+        self.moved = 0
+
+    async def back(self):
+        """Vuelve a la primera página (deshace los `next`). La posición del control cambia con
+        el largo de la tabla, así que se detecta sobre la pantalla actual en cada paso."""
+        while self.moved > 0:
+            try:
+                els, c = await detect_elements(self.frame)
+                self.cost += c
+            except Exception:
+                return self.frame
+            el = find_prev_control(els)
+            if el is None:
+                return self.frame
+            await click(self.client, el.x, el.y)
+            self.frame = await wait_and_capture(self.client)
+            self.moved -= 1
+        return self.frame
 
     async def next(self):
         if not self.looked:
@@ -54,4 +82,5 @@ class Pager:
             trace("pager.fin")
             return None  # botón deshabilitado o último listado: la pantalla no cambió
         self.frame = new
+        self.moved += 1
         return self.frame

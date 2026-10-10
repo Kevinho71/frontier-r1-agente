@@ -24,7 +24,7 @@ class Element:
 
 
 # Qwen3-VL devuelve coordenadas relativas en 0-1000 (no fracciones ni píxeles).
-# Verificado contra la pantalla real: Buscar (382,130)px ↔ (298,162) en 0-1000.
+# Verificado contra la pantalla real: un botón en (382,130)px ↔ (298,162) en 0-1000.
 _SCALE_1000_PREFIXES = ("qwen/qwen3-vl",)
 
 

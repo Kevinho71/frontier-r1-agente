@@ -17,10 +17,13 @@ def parse_plan(parsed) -> list[Milestone]:
         if isinstance(item, dict):
             text = str(item.get("hito") or item.get("milestone") or "").strip()
             expected = str(item.get("pantalla_esperada") or item.get("expected") or "").strip()
+            locate = str(item.get("localiza_registro") or item.get("locate") or "").strip()
+            if locate.lower() in ("null", "none"):
+                locate = ""
         else:
-            text, expected = str(item).strip(), ""
+            text, expected, locate = str(item).strip(), "", ""
         if text:
-            out.append(Milestone(text, expected))
+            out.append(Milestone(text, expected, locate))
     return out
 
 

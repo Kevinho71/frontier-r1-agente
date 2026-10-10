@@ -1,0 +1,15 @@
+# deps / venvs
+.venv/
+.designvenv/
+__pycache__/
+*.pyc
+
+# artefactos generados del spike
+spikes/captures/
+
+# secretos
+.env
+*.pem
+
+# contexto con credenciales (NO subir)
+RETO1_CONTEXTO.md

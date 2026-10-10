@@ -1,0 +1,80 @@
+<svg width="1200" height="620" viewBox="0 0 1200 620" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Arial">
+  <rect width="1200" height="620" fill="#0d1117"/>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#58a6ff"/>
+    </marker>
+  </defs>
+  <style>
+    .box{fill:#1c2431;stroke:#30363d;rx:8px}
+    .title{fill:#e6edf3;font-size:15px;font-weight:700}
+    .sub{fill:#9aa7b4;font-size:11.5px}
+    .lbl{fill:#58a6ff;font-size:12px;font-weight:600}
+    .edge{stroke:#58a6ff;stroke-width:1.6;fill:none;marker-end:url(#arr)}
+    .edgeg{stroke:#3fb950;stroke-width:1.6;fill:none;marker-end:url(#arr)}
+  </style>
+
+  <text x="600" y="30" text-anchor="middle" fill="#9aa7b4" font-size="12">Arquitectura — Agente computer-use sobre escritorio remoto (solo píxeles)</text>
+
+  <rect class="box" x="20" y="55" width="180" height="70"/>
+  <text class="title" x="110" y="83" text-anchor="middle">JUEZ</text>
+  <text class="sub" x="110" y="103" text-anchor="middle">Bearer · eval</text>
+
+  <rect class="box" x="20" y="185" width="260" height="150"/>
+  <text class="title" x="150" y="213" text-anchor="middle">SERVICIO HTTP</text>
+  <text class="sub" x="150" y="231" text-anchor="middle">FastAPI · un contenedor</text>
+  <text class="lbl" x="40" y="257">GET  /health → 200</text>
+  <text class="lbl" x="40" y="277">POST /tasks → 202 {task_id} (&lt;2s)</text>
+  <text class="lbl" x="40" y="297">GET  /tasks/{id} → {estado, resumen}</text>
+  <text class="sub" x="40" y="321">auth Bearer · cola asyncio + workers</text>
+
+  <rect class="box" x="330" y="185" width="160" height="70"/>
+  <text class="title" x="410" y="215" text-anchor="middle">COLA</text>
+  <text class="sub" x="410" y="235" text-anchor="middle">asyncio.Queue</text>
+
+  <rect class="box" x="330" y="295" width="160" height="60"/>
+  <text class="title" x="410" y="323" text-anchor="middle">STORE</text>
+  <text class="sub" x="410" y="341" text-anchor="middle">SQLite · estado</text>
+
+  <rect class="box" x="540" y="145" width="300" height="240"/>
+  <text class="title" x="690" y="173" text-anchor="middle">WORKER (por tarea · ≤5 min)</text>
+  <text class="sub" x="690" y="191" text-anchor="middle">loop: plan → observe → act → check</text>
+
+  <rect class="box" x="560" y="210" width="260" height="36"/>
+  <text class="title" x="690" y="233" text-anchor="middle">Desktop I/O</text>
+
+  <rect class="box" x="560" y="250" width="260" height="36"/>
+  <text class="title" x="690" y="273" text-anchor="middle">Percepción · crop/diff/OCR</text>
+
+  <rect class="box" x="560" y="290" width="260" height="36"/>
+  <text class="title" x="690" y="313" text-anchor="middle">Cognición · PLAN/ACT/CHECK</text>
+
+  <rect class="box" x="560" y="330" width="260" height="30"/>
+  <text class="title" x="690" y="350" text-anchor="middle">Modelos (OpenRouter)</text>
+
+  <text class="sub" x="690" y="230" text-anchor="middle"></text>
+  <text class="sub" x="560" y="229" text-anchor="start" fill="#9aa7b4" font-size="10.5">asyncvnc + puente WS↔RFB</text>
+
+  <rect class="box" x="920" y="145" width="250" height="180"/>
+  <text class="title" x="1045" y="173" text-anchor="middle">ESCRITORIO REMOTO</text>
+  <text class="sub" x="1045" y="191" text-anchor="middle">noVNC · websockify · VNC</text>
+  <rect class="box" x="940" y="205" width="210" height="100"/>
+  <text class="title" x="1045" y="230" text-anchor="middle">App legacy</text>
+  <text class="sub" x="1045" y="250" text-anchor="middle">SIGECOM (y 5 más)</text>
+  <text class="sub" x="1045" y="270" text-anchor="middle">framebuffer 1280×800</text>
+  <text class="sub" x="1045" y="290" text-anchor="middle">solo píxeles · sin DOM</text>
+
+  <rect class="box" x="540" y="415" width="300" height="60"/>
+  <text class="title" x="690" y="441" text-anchor="middle">OBSERVABILIDAD</text>
+  <text class="sub" x="690" y="461" text-anchor="middle">JSONL por tarea + screenshots → evidencia</text>
+
+  <path class="edge" d="M200 125 L200 185"/>
+  <text class="sub" x="210" y="160" font-size="10">Bearer token</text>
+  <path class="edge" d="M280 230 L330 230"/>
+  <path class="edge" d="M150 335 L150 365 L330 365 L330 325"/>
+  <path class="edge" d="M490 220 L540 220"/>
+  <path class="edge" d="M840 235 L920 235"/>
+  <path class="edgeg" d="M840 260 L920 260"/>
+  <text class="sub" x="852" y="253" font-size="10" fill="#3fb950">capture()/input()</text>
+  <path class="edge" d="M690 385 L690 415"/>
+</svg>

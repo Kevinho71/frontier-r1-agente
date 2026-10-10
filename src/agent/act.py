@@ -17,7 +17,7 @@ from desktop.capture import wait_and_capture
 from model import Capability, chat, chat_vision, load_prompt, select
 from vision.locate import detect_elements
 
-from .actions import execute_actions, normalize_text
+from .actions import allows_retry, execute_actions, is_commit_label, normalize_text, resolve_element
 from .trace import trace
 
 
@@ -27,6 +27,26 @@ class ActState:
 
     last_labels: set = field(default_factory=set)
     last_click: str = ""
+    committed: list = field(default_factory=list)  # (etiqueta, x, y) de botones de confirmación ya pulsados
+
+    def blocked(self, el, feedback: str = "") -> bool:
+        """¿Volver a pulsar este botón de confirmación duplicaría el efecto?
+
+        Se bloquea el MISMO botón (misma etiqueta y posición) ya pulsado, salvo que la
+        verificación reporte un error de validación (el envío no llegó a hacerse).
+        """
+        if allows_retry(feedback):
+            return False
+        label = normalize_text(el.text)
+        return any(label == c[0] and abs(el.x - c[1]) < 25 and abs(el.y - c[2]) < 25 for c in self.committed)
+
+    def record(self, actions, elements) -> None:
+        for a in actions or []:
+            if str(a.get("op")) != "click_text":
+                continue
+            el = resolve_element(elements, a.get("index"), str(a.get("text", "")))
+            if el is not None and is_commit_label(el.text):
+                self.committed.append((normalize_text(el.text), el.x, el.y))
 
 
 @dataclass
@@ -102,6 +122,12 @@ async def act(
         if labels - state.last_labels:
             avoid = state.last_click
             elements = [e for e in elements if normalize_text(e.text) != avoid]
+    had_elements = bool(elements)
+    if state is not None and state.committed:
+        kept = [e for e in elements if not state.blocked(e, feedback)]
+        if len(kept) != len(elements):
+            trace("guard.duplicado", bloqueados=[e.text for e in elements if e not in kept])
+        elements = kept
     elements = sort_elements(elements)
 
     if elements:
@@ -125,6 +151,8 @@ async def act(
         )
         cost += res.cost_usd
         actions = (res.parsed or {}).get("actions") or []
+    elif had_elements:
+        actions = []  # todo lo detectado era un botón de confirmación ya pulsado: no hacer nada
     else:
         # fallback: grounding por visión con coordenadas
         model = select(Capability.GROUND) or select(Capability.HARD)
@@ -149,6 +177,7 @@ async def act(
         for a in actions or []:
             if str(a.get("op")) == "click_text":
                 state.last_click = normalize_text(a.get("text", ""))
+        state.record(actions, elements)
     executed = await execute_actions(client, actions, w, h, elements=elements, max_actions=max_actions)
     frame_after = await wait_and_capture(client)
     return ActResult(frame_after, executed, cost, describe_actions(actions))

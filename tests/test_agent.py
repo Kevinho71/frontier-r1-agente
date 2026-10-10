@@ -455,5 +455,65 @@ class CostAccTest(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(sum(acc), 0)
 
 
+class GuardTest(unittest.TestCase):
+    def test_is_commit_label(self):
+        from agent.actions import is_commit_label
+
+        for t in ("Guardar", "Crear cliente", "Exportar", "Save", "Guardar cambios"):
+            self.assertTrue(is_commit_label(t), t)
+        for t in ("Buscar", "Filtrar", "Nombre", "Cancelar", "Siguiente", "Cliente"):
+            self.assertFalse(is_commit_label(t), t)
+
+    def test_bloquea_mismo_boton_y_permite_con_error(self):
+        from agent.act import ActState
+
+        st = ActState()
+        els = [Element("Guardar", 500, 600), Element("Nombre", 100, 100)]
+        st.record([{"op": "click_text", "index": 1, "text": "Guardar"}], els)
+        self.assertTrue(st.blocked(Element("Guardar", 505, 598)))
+        self.assertFalse(st.blocked(Element("Guardar", 900, 100)))  # otro botón
+        self.assertFalse(st.blocked(Element("Nombre", 100, 100)))
+        self.assertFalse(st.blocked(Element("Guardar", 500, 600), "Error: el campo teléfono es obligatorio"))
+
+    def test_no_registra_botones_de_busqueda(self):
+        from agent.act import ActState
+
+        st = ActState()
+        st.record([{"op": "click_text", "index": 1, "text": "Buscar"}], [Element("Buscar", 1, 1)])
+        self.assertEqual(st.committed, [])
+
+
+class ScreenshotReconnectTest(unittest.IsolatedAsyncioTestCase):
+    async def test_reconecta_una_vez_si_el_flujo_se_desincroniza(self):
+        from desktop.capture import screenshot
+
+        class C:
+            calls = 0
+            reconnected = 0
+
+            async def screenshot(self):
+                self.calls += 1
+                if self.calls == 1:
+                    raise ValueError(3072345193)
+                return "frame"
+
+            async def _reconnect(self):
+                self.reconnected += 1
+
+        c = C()
+        self.assertEqual(await screenshot(c), "frame")
+        self.assertEqual(c.reconnected, 1)
+
+    async def test_sin_reconexion_propaga(self):
+        from desktop.capture import screenshot
+
+        class C:
+            async def screenshot(self):
+                raise ValueError(1)
+
+        with self.assertRaises(ValueError):
+            await screenshot(C())
+
+
 if __name__ == "__main__":
     unittest.main()

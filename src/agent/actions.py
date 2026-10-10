@@ -50,6 +50,26 @@ def normalize_text(s: str) -> str:
     return " ".join(s.lower().split())
 
 
+# Botones que CONFIRMAN un cambio en la app (guardar, crear, enviar...). Pulsarlos dos veces
+# crea registros duplicados o repite un efecto: ver `ActState.blocked` en act.py.
+_COMMIT_WORDS = (
+    "guardar", "crear", "registrar", "confirmar", "enviar", "exportar", "eliminar", "borrar",
+    "actualizar", "save", "create", "submit", "delete", "export", "confirm", "send",
+)
+# Si la verificación dice que el envío falló por validación, volver a pulsar sí está permitido.
+_RETRY_WORDS = ("error", "obligatori", "requerid", "invalid", "inválid", "falta", "campo vac", "no se guard", "no se pudo")
+
+
+def is_commit_label(text: str) -> bool:
+    t = normalize_text(text)
+    return bool(t) and any(w in t.split() or t.startswith(w) for w in _COMMIT_WORDS)
+
+
+def allows_retry(feedback: str) -> bool:
+    f = normalize_text(feedback)
+    return any(normalize_text(w) in f for w in _RETRY_WORDS)
+
+
 def find_element(elements, target: str):
     """Busca un elemento por etiqueta: exacta; si no, la substring más cercana en longitud.
 

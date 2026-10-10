@@ -1,0 +1,7 @@
+asyncvnc
+websockets
+pillow
+httpx
+numpy
+fastapi
+uvicorn

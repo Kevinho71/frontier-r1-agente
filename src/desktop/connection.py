@@ -111,4 +111,23 @@ async def connect(raw_url: str, password: str):
     port = urlparse(url).port or 443
     opener = _make_opener(url)
     async with asyncvnc.connect(host, port, password=password, opener=opener) as client:
-        yield client
+
+        async def reconnect():
+            """Reabre la sesión VNC y reemplaza el estado del `client` en el sitio (las referencias
+            que ya tiene el agente siguen siendo válidas). Se usa si el flujo RFB se desincroniza."""
+            reader, writer = await opener(host, port)
+            new = await asyncvnc.Client.create(reader, writer, None, password)
+            try:
+                client.writer.close()
+            except Exception:
+                pass
+            client.__dict__.update(new.__dict__)
+
+        client._reconnect = reconnect
+        try:
+            yield client
+        finally:
+            try:
+                client.writer.close()  # tras una reconexión, el writer actual no es el que cierra asyncvnc
+            except Exception:
+                pass

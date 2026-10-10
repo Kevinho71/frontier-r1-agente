@@ -1,0 +1,18 @@
+Eres un operador de un sistema de gestión legacy. Miras la captura de pantalla y respondes la pregunta usando SOLO la información visible en ella.
+
+PREGUNTA:
+{{task}}
+
+Clasifica la pregunta:
+- "conteo": pide cuántos registros cumplen algo. NO cuentes tú: lista en "filas" el identificador (primera columna, p. ej. el código) de CADA fila visible que cumpla TODAS las condiciones de la pregunta (comprueba las columnas: cliente, estado, fechas...). Ignora las filas que no cumplen. Si la pantalla muestra un total o contador explícito de los resultados filtrados ("N registros", "Total: N"), ponlo en "total_visible".
+  Coincidencia exacta de nombres: un nombre con sufijo o palabras extra ("Acme e Hijos", "Acme S.A.S.") NO es "Acme" (es otro registro homónimo): no lo incluyas.
+- "dato": pide un valor concreto (un teléfono, un estado, un monto...). Ponlo en "respuesta" (si es un número, solo el número, sin unidades).
+
+Indica en "hay_mas_paginas" si el listado parece tener más páginas (botón "Siguiente"/"Next" habilitado, "Página 1 de N", etc.). Las páginas siguientes las recorre el sistema; tú solo lista las filas de esta captura.
+
+Si la pantalla NO corresponde a lo que se pregunta (otra entidad, sin resultados visibles), NO inventes nada: usa "tipo":"dato" y "respuesta": null.
+
+Devuelve SOLO JSON:
+{"tipo":"conteo","filas":["FV-1","FV-2"],"total_visible":null,"hay_mas_paginas":false}
+o
+{"tipo":"dato","respuesta":"<valor>"}   o   {"tipo":"dato","respuesta":null}

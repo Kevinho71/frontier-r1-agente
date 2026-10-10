@@ -1,0 +1,16 @@
+Tienes las filas de una tabla leída de un sistema de gestión. Selecciona las filas que cumplen TODAS las condiciones de la pregunta.
+
+PREGUNTA:
+{{task}}
+
+Reglas:
+- Evalúa cada fila por separado, comparando cada condición con la columna correspondiente.
+- Los nombres deben coincidir exactamente: un nombre con sufijo o palabras extra ("Acme e Hijos", "Acme S.A.S.") NO es "Acme" (es otro registro homónimo).
+- Un estado debe coincidir con el pedido literalmente (un estado distinto, aunque parecido, no cuenta).
+- Devuelve el identificador (primera columna) de CADA fila que cumple, exactamente como aparece.
+
+TABLA (columnas separadas por " | "):
+{{table}}
+
+Devuelve SOLO JSON:
+{"ids":["FV-1","FV-2"]}

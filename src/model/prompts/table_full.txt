@@ -1,0 +1,8 @@
+Transcribe la tabla de datos visible en esta captura, fila por fila, SIN omitir ninguna fila y sin resumir. Copia cada celda tal cual se lee (conserva acentos, ceros a la izquierda y números completos).
+
+Incluye TODAS las columnas visibles, en el orden en que aparecen; la primera columna identifica la fila.
+
+Devuelve SOLO JSON:
+{"columnas":["Col1","Col2","Col3"],"filas":[["a1","b1","c1"],["a2","b2","c2"]]}
+
+Si no hay ninguna tabla de datos en la captura, devuelve {"columnas":[],"filas":[]}.

@@ -1,6 +1,6 @@
 # Fase 2 — Síntesis: `src/vision/` (percepción barata)
 
-## Qué se realizó
+## 1. Resumen
 
 Percepción sobre el framebuffer, previa al modelo de visión, para ahorrar tokens y verificar barato:
 
@@ -10,7 +10,7 @@ Percepción sobre el framebuffer, previa al modelo de visión, para ahorrar toke
 | `diff.py` | `frame_signature()`, `diff_fraction()`, `changed()` |
 | `ocr.py` | `extract_text()` (modelo barato `ling-3.0-flash-vl`) |
 
-## Qué cambió respecto a antes
+## 2. Estado Anterior vs. Actual
 
 - **Antes:** `crop_region()` vivía en `src/desktop/capture.py` (mezclado con I/O); no había diff
   ni OCR.
@@ -18,9 +18,9 @@ Percepción sobre el framebuffer, previa al modelo de visión, para ahorrar toke
   añadieron `diff` y `ocr`.
 - **Cambio de decisión:** el umbral de `changed()` bajó de **1% a 0.1%**.
 
-## Decisiones de diseño (y por qué)
+## 3. Decisiones Técnicas
 
-1. **`crop` en `visión`, no en `desktop`.**
+1. **`crop` en `vision`, no en `desktop`.**
    `desktop/` = primitivas de I/O (capturar, clicar). `vision/` = transformación de la imagen
    (recortar, re-encuadrar, comparar). Separar por responsabilidad evita acoplar el framebuffer
    crudo con la lógica del agente.
@@ -50,3 +50,6 @@ Percepción sobre el framebuffer, previa al modelo de visión, para ahorrar toke
 - OCR del home leyó exacto: `SIGECOM · Distribuidora Andina v3.9 / Hoy: 14/10/2026 · Usuario:
   operador2 / Archivo Comercial Cartera Herramientas Ayuda`.
 - `downscale(800)` y `crop_region` con shapes correctos.
+
+> Nota (Fase 3): `ocr.py` fue refactorizado para delegar su llamada OpenRouter en `model.client`;
+> su firma y comportamiento se mantienen iguales.

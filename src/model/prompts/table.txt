@@ -1,0 +1,9 @@
+Transcribe la tabla de datos visible en esta captura, fila por fila, SIN omitir ninguna fila y sin resumir. Copia cada celda tal cual se lee (conserva acentos y sufijos como "e Hijos" o "S.A.S.").
+
+Para ahorrar espacio, incluye SOLO las columnas necesarias para responder esta pregunta (más la primera columna, que identifica la fila):
+{{task}}
+
+Devuelve SOLO JSON:
+{"columnas":["Código","Cliente","Estado"],"filas":[["FV-1","Cliente A","Vencida"],["FV-2","Cliente B","Pagada"]]}
+
+Si no hay ninguna tabla de datos en la captura, devuelve {"columnas":[],"filas":[]}.

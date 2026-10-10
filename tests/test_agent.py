@@ -118,6 +118,10 @@ class Scale1000Test(unittest.TestCase):
         self.assertEqual(parse_item(["Aplicar", 270, 150, 326, 174]), ("Aplicar", [270, 150, 326, 174]))
         self.assertEqual(parse_item("x"), ("", []))
 
+    def test_caja_pegada_al_borde_no_se_toma_como_fraccion(self):
+        # x1=1 en escala 0-1000 son ~1 px, no 1*1280
+        self.assertEqual(_box_center([1, 500, 41, 540], 1280, 800, 1000), (26, 416))
+
     def test_fraccion_pese_a_escala(self):
         self.assertEqual(_box_center([0.14, 0.02, 0.18, 0.06], 1280, 800, 1000), (204, 32))
 
@@ -416,6 +420,39 @@ class DisambiguateTest(unittest.IsolatedAsyncioTestCase):
         res = await resolve_record("t", object())
         self.assertEqual(res.candidates, [])
         self.assertFalse(res.ambiguous)
+
+
+class CostAccTest(unittest.IsolatedAsyncioTestCase):
+    async def test_chat_suma_al_acumulador(self):
+        import model.client as mc
+
+        class R:
+            status_code = 200
+
+            def json(self):
+                return {"choices": [{"message": {"content": "{}"}}], "usage": {"prompt_tokens": 1000, "completion_tokens": 100}}
+
+        class C:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *a):
+                pass
+
+            async def post(self, *a, **k):
+                return R()
+
+        orig = mc.httpx.AsyncClient
+        mc.httpx.AsyncClient = lambda **k: C()
+        os_env = __import__("os").environ
+        os_env.setdefault("OPENROUTER_API_KEY", "x-test-key")
+        self.addCleanup(lambda: setattr(mc.httpx, "AsyncClient", orig))
+        acc = []
+        mc.cost_acc.set(acc)
+        await mc.chat([{"role": "user", "content": "hi"}], "qwen/qwen3-vl-30b-a3b-instruct")
+        await mc.chat([{"role": "user", "content": "hi"}], "qwen/qwen3-vl-30b-a3b-instruct")
+        self.assertEqual(len(acc), 2)
+        self.assertGreater(sum(acc), 0)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import json
 import os
 import random
@@ -19,6 +20,11 @@ MAX_RETRIES = 3
 # Modelos "thinking" cuyos tokens de razonamiento consumen max_tokens (y truncan el JSON).
 # Para planificar/decidir no hace falta razonar: se desactiva (más rápido y barato).
 _NO_REASONING_PREFIXES = ("deepseek/",)
+
+
+# Acumulador de costo por tarea: cada llamada exitosa suma su costo estimado a la lista del
+# contexto actual (las sub-tareas asyncio comparten la misma lista), así el total es completo.
+cost_acc: contextvars.ContextVar = contextvars.ContextVar("cost_acc", default=None)
 
 
 class LLMError(Exception):
@@ -186,6 +192,9 @@ async def chat(
                 if json_mode and result.parsed is None:
                     last_err = LLMError(f"{model}: respuesta sin JSON válido", retryable=True)
                 else:
+                    acc = cost_acc.get()
+                    if acc is not None:
+                        acc.append(result.cost_usd)
                     return result
             elif resp.status_code == 429:
                 if not _retryable(_safe_json(resp)):

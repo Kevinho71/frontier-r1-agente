@@ -6,6 +6,7 @@ import asyncio
 import time
 
 from desktop.connection import connect
+from model import LLMError, cost_acc
 from vision.diff import frame_signature
 from vision.locate import detect_elements
 
@@ -43,6 +44,8 @@ async def run_task(
     secrets = [desktop_password]
     t0 = time.monotonic()
     steps = 0
+    costs: list[float] = []
+    cost_acc.set(costs)  # todas las llamadas a modelos de esta tarea suman aquí (OCR, plan, tablas...)
     cost = 0.0
 
     def remaining() -> float:
@@ -86,18 +89,23 @@ async def run_task(
                         reason = "límite de pasos alcanzado"
                         break
 
-                    act_res = await act(
-                        client,
-                        task,
-                        hito.text,
-                        expected=hito.expected,
-                        history=history,
-                        feedback=feedback,
-                        state=act_state,
-                        prefetched=prefetched,
-                    )
+                    try:
+                        act_res = await act(
+                            client,
+                            task,
+                            hito.text,
+                            expected=hito.expected,
+                            history=history,
+                            feedback=feedback,
+                            state=act_state,
+                            prefetched=prefetched,
+                        )
+                    except LLMError as exc:  # un fallo transitorio de modelo gasta un intento, no la tarea
+                        trace("act.llm_error", err=repr(exc))
+                        prefetched = None
+                        attempts += 1
+                        continue
                     prefetched = None
-                    cost += act_res.cost_usd
                     if act_res.description:
                         history.append(act_res.description)
                     steps += 1
@@ -120,8 +128,12 @@ async def run_task(
                     # se detecta en paralelo con el check (misma captura).
                     det_task = asyncio.create_task(detect_elements(act_res.frame_after))
                     prefetched = (act_res.frame_after, det_task)
-                    chk = await check(client, task, hito.text, act_res.frame_after, hito.expected, frame=act_res.frame_after)
-                    cost += chk.cost_usd
+                    try:
+                        chk = await check(client, task, hito.text, hito.expected, frame=act_res.frame_after)
+                    except LLMError as exc:
+                        trace("check.llm_error", err=repr(exc))
+                        attempts += 1
+                        continue
                     steps += 1
                     feedback = chk.description
                     if chk.ok:
@@ -138,13 +150,20 @@ async def run_task(
                             except Exception as exc:
                                 trace("disambiguate.error", err=repr(exc))
                                 res = None
-                            cost += pager.cost
                             if pager.moved:
                                 await pager.back()
                                 prefetched = None  # la pantalla pudo cambiar: act() captura de nuevo
-                            if res is not None and res.ambiguous:
+                            if res is None:
+                                # Sin poder comprobar que el registro es único no se toca nada.
+                                reason = f'No se pudo verificar que "{hito.locate}" sea un único registro; no se modificó nada.'
+                            elif res.ambiguous:
                                 reason = ambiguity_reason(hito.locate, res)
                                 trace("ambiguo", reason=reason)
+                            elif res.candidates and not res.complete:
+                                reason = (
+                                    f'No se pudo recorrer todo el listado para confirmar que "{hito.locate}" sea único '
+                                    "(demasiadas páginas o poco tiempo); no se modificó nada."
+                                )
                             elif res is not None and res.unique:
                                 carry_hint = (
                                     f"Registro objetivo ya identificado en el listado: {describe_row(res.cols, res.unique)}. "
@@ -176,7 +195,6 @@ async def run_task(
                 except Exception as exc:
                     trace("answer.error", err=repr(exc))
                     answer = None
-                cost += pager.cost
                 if answer is None:
                     task_done = False
                     reason = "no se pudo determinar la respuesta en la pantalla"
@@ -184,6 +202,7 @@ async def run_task(
 
             if det_task is not None and not det_task.done():
                 det_task.cancel()
+            cost = sum(costs)
             estado = "terminada" if task_done else "fallida"
             resumen = format_summary(
                 task,
@@ -197,4 +216,4 @@ async def run_task(
             return TaskResult(estado, resumen, steps, cost)
 
     except Exception as exc:
-        return TaskResult("fallida", redact_text(f"Error en la tarea: {exc}", secrets), steps, cost)
+        return TaskResult("fallida", redact_text(f"Error en la tarea: {exc}", secrets), steps, sum(costs))

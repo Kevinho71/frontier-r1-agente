@@ -41,7 +41,7 @@ def _to_px(v: float, size: int, scale: int | None = None) -> float:
     acepta fracción 0-1 o píxel absoluto.
     """
     if scale:
-        return v * size / scale if abs(v) > 1.5 else v * size
+        return v * size / scale
     return v * size if -1.5 <= v <= 1.5 else v
 
 

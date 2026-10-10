@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 from desktop.capture import wait_and_capture
 from model import Capability, chat_vision, load_prompt, select
-from vision.diff import changed as frame_changed
 from vision.ocr import extract_text
 
 from .trace import trace
@@ -17,16 +16,14 @@ from .trace import trace
 class CheckResult:
     ok: bool
     description: str
-    changed: bool
     cost_usd: float
 
 
-async def check(client, task: str, milestone: str, prev_frame, expected: str = "", *, frame=None) -> CheckResult:
+async def check(client, task: str, milestone: str, expected: str = "", *, frame=None) -> CheckResult:
     """¿Se cumplió el hito? diff global + OCR de contexto + veredicto por visión."""
     t0 = time.monotonic()
     # Reutiliza la captura que act() ya tomó tras esperar el repintado (ahorra ~1s+).
     cur = frame if frame is not None else await wait_and_capture(client)
-    changed_flag = frame_changed(prev_frame, cur) if prev_frame is not None else True
     try:
         ocr_text = await extract_text(cur)
     except Exception:
@@ -40,4 +37,4 @@ async def check(client, task: str, milestone: str, prev_frame, expected: str = "
     ok = bool(parsed.get("ok"))
     desc = str(parsed.get("description", ""))
     trace("check", milestone=milestone, ok=ok, desc=desc, total_s=round(time.monotonic() - t0, 1))
-    return CheckResult(ok, desc, changed_flag, res.cost_usd)
+    return CheckResult(ok, desc, res.cost_usd)

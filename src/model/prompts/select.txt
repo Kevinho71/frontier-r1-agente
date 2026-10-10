@@ -6,21 +6,36 @@ TAREA:
 HITO ACTUAL:
 {{milestone}}
 
+PANTALLA ESPERADA AL CUMPLIR EL HITO:
+{{expected}}
+
+ACCIONES YA REALIZADAS (más recientes al final):
+{{history}}
+
+RESULTADO DE LA ÚLTIMA VERIFICACIÓN (qué se ve ahora):
+{{feedback}}
+
 Elementos visibles en la pantalla (numerados):
 {{elements}}
 
 Acciones disponibles:
-- {"op":"click_text","text":"<texto exacto del elemento>"}  → hacer clic en ese elemento
+- {"op":"click_text","index":N,"text":"<texto del elemento N>"}  → clic en el elemento N de la lista (usa SIEMPRE index y text)
 - {"op":"type","text":"..."}     → escribir texto en el campo que tenga el foco
 - {"op":"press","key":"Enter"}   → presionar una tecla
 - {"op":"select_all"}            → Ctrl+A (seleccionar todo el campo)
 - {"op":"wait","ms":800}         → esperar (≥800 ms tras cada clic)
 
 Reglas:
+- PRIORIDAD 1: si hay un cuadro de diálogo, ventana emergente o aviso que bloquea la pantalla (se reconoce por botones como "Entendido", "Aceptar", "Cerrar", "OK", "X", o porque la verificación lo menciona), ciérralo ANTES de cualquier otra cosa, siempre que sea solo informativo (novedades, avisos, publicidad). Si es una confirmación de una acción que forma parte de la tarea, responde según lo que pide la tarea. Mientras un diálogo bloquea, los clics en el resto de la pantalla no hacen nada.
 - Devuelve SIEMPRE al menos una acción que haga avanzar hacia el hito.
-- Para clicar, usa el texto EXACTO tal como aparece en la lista numerada.
-- Si hay que escribir en un campo, primero haz "click_text" sobre ese campo y luego "type".
-- Antes de "type" en un campo que ya tiene texto, incluye "select_all" justo antes.
+- Elige el elemento cuyo nombre corresponde a la ENTIDAD que el hito necesita (ej. el hito habla de facturas → "Facturas", no "Clientes"). No elijas por parecido de palabra con un dato de la tarea (nombres propios son filtros, no menús).
+- Si un menú desplegable ya está abierto y muestra la opción que buscas, clica esa opción. NO vuelvas a clicar el menú padre: lo cerraría.
+- Si la última verificación dice que estás en otra pantalla o que el menú equivocado está abierto, cámbialo: elige otro menú u opción y NO repitas la última acción que falló.
+- Si no ves la opción que buscas, abre un menú de nivel superior que aún no hayas probado (revisa las acciones ya realizadas) para ver sus opciones.
+- Ejecuta en UN solo lote todo lo que se pueda hacer con la pantalla actual: si el hito pide rellenar varios campos y aplicarlos, devuelve clic+escritura de cada campo y el clic final del botón (p. ej. Buscar), no solo el primer paso. Solo debes parar y esperar una pantalla nueva cuando la siguiente acción dependa de algo que aún no está visible (un menú o lista que se abre).
+- Si hay que escribir en un campo, primero haz "click_text" sobre ese campo y luego "type" (el sistema ya reemplaza el contenido previo del campo).
+- Si la última verificación dice que algunos campos ya tienen el valor correcto, NO los vuelvas a rellenar: haz solo lo que falta (por ejemplo, solo pulsar el botón de aplicar).
+- Un campo desplegable (dropdown/select) se maneja así: haz clic en él para abrirlo, espera, escribe el texto de la opción que quieres y pulsa Enter. Después pulsa el botón de buscar/aplicar si el hito lo pide.
 - Tras cada clic que probablemente cambie la pantalla, incluye un "wait".
 
 Responde SOLO con JSON en este formato:

@@ -1,6 +1,8 @@
-Detecta los elementos interactivos visibles en esta captura: elementos de menú, botones, enlaces, opciones, campos de entrada de formulario y campos de selección (dropdowns). Para cada uno devuelve su texto y su bounding box normalizado [x1, y1, x2, y2] (fracciones de 0 a 1 del ancho y alto).
+Detecta los elementos interactivos visibles en esta captura: elementos de menú, botones, enlaces, opciones, campos de entrada de formulario y campos de selección (dropdowns). NO incluyas el contenido de las filas de datos de las tablas ni textos que no se puedan pulsar; sí los encabezados de columna que sean pulsables, los enlaces dentro de tablas solo si hay pocos.
 
-Para un campo de entrada, usa su etiqueta visible asociada como "text" y pon la caja sobre el CAMPO (donde se escribe), no sobre la etiqueta.
+Para cada elemento devuelve [texto, x1, y1, x2, y2] con la caja en coordenadas relativas de 0 a 1000 (x1,y1 = esquina superior izquierda; x2,y2 = esquina inferior derecha; (0,0) = esquina superior izquierda de la imagen y (1000,1000) = esquina inferior derecha).
+
+Para un campo de entrada o un dropdown, usa su etiqueta visible asociada como texto (o su valor actual si es un dropdown, p. ej. "Todos") y pon la caja sobre el CAMPO (donde se escribe o se despliega), no sobre la etiqueta.
 
 Responde SOLO con JSON en este formato:
-{"items":[{"text":"Archivo","box":[0.01,0.02,0.05,0.06]}, ...]}
+{"items":[["Archivo",10,45,40,70],["Buscar",270,150,326,174]]}

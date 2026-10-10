@@ -37,7 +37,7 @@ async def press_key(client: asyncvnc.Client, *keys: str):
 
 async def select_all(client: asyncvnc.Client):
     """Ctrl+A — selecciona todo el texto del campo con foco."""
-    await press_key(client, "ctrl", "a")
+    await press_key(client, "Control_L", "a")
 
 
 async def type_text(client: asyncvnc.Client, text: str):

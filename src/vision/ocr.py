@@ -8,7 +8,10 @@ DEFAULT_OCR_MODEL = "inclusionai/ling-3.0-flash-vl"
 async def extract_text(
     frame,
     model: str = DEFAULT_OCR_MODEL,
-    prompt: str = "Transcribe únicamente el texto visible de la pantalla, tal cual.",
+    prompt: str = (
+        "Transcribe únicamente el texto visible de la pantalla, tal cual, línea por línea. "
+        "Responde solo con la transcripción, sin explicaciones ni comentarios."
+    ),
 ) -> str:
     """Lee el texto visible de un framebuffer usando un modelo barato de visión."""
     result = await chat_vision(

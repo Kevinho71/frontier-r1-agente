@@ -6,6 +6,14 @@ from dataclasses import dataclass
 
 
 @dataclass
+class Milestone:
+    """Hito del plan: qué hacer y cómo se reconoce la pantalla al cumplirlo."""
+
+    text: str
+    expected: str = ""
+
+
+@dataclass
 class TaskResult:
     estado: str  # "terminada" | "fallida"
     resumen: str

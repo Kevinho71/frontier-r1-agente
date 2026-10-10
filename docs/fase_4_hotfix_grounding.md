@@ -167,3 +167,43 @@ lo lleva a "Clientes". Es el reto central del brief ("aprender a usar la app com
 - Que `select`/`check` verifiquen que llegó al módulo esperado (con OCR de contexto) y corrijan.
 
 Próximo paso: afinar `plan`/`select`/`check` con la app real, no más cambios de grounding.
+
+---
+
+# Iteración 3 — Planificación, estado entre pasos, lectura de tablas (E3 ✅)
+
+## 1. Resultado
+
+E3 → `respuesta: 45`, `terminada` (134 s, $0.0055). Los 6 prompts siguen siendo **genéricos** (la app de
+evaluación es otra); nada nombra módulos de SIGECOM. Diagnóstico con la nueva traza (`RETO1_TRACE=1`):
+el error de "ir a Clientes" venía del plan (hito "seleccionar el cliente en la lista de clientes"), pero
+tras corregirlo aparecieron otros 6 bloqueantes que los prompts solos no arreglaban.
+
+## 2. Causas y arreglos
+
+| # | Causa (evidencia) | Arreglo |
+|---|---|---|
+| 1 | El plan trataba el nombre del cliente como lugar al que navegar | `plan.txt`: entidad objetivo vs filtros; hitos agrupados; `pantalla_esperada` por hito (`Milestone`) |
+| 2 | `act()` sin memoria: repetía el mismo clic que cerraba el menú (toggle) | `ActState` + `avoid` (excluye de la lista el elemento recién clicado si aparecieron elementos nuevos); `history` y `feedback` del `check` van al `select` |
+| 3 | `check` aprobaba con el menú abierto / sin comparar campos | `check.txt`: pantalla esperada, título, comparación literal de campos, "sin resultados" ⇒ desconfiar, diálogos bloquean |
+| 4 | **Cajas de Qwen3-VL en 0–1000** leídas como píxeles → clics intermitentes fuera de sitio | `scale_for()` en `vision/locate.py`; prompt de detección pide 0–1000 y formato compacto |
+| 5 | `select_all` roto (`'ctrl'`) y reintentos concatenaban texto | `Control_L`; `type` auto-precedido de Ctrl+A |
+| 6 | Lotes truncados a 8 acciones (nunca llegaba a "Buscar") | `max_actions=16`; acción inválida no tumba el lote |
+| 7 | `deepseek-v4-flash` agotaba `max_tokens` pensando → HTTP 200 sin JSON → error | `reasoning: {"enabled": false}`; el `else` final del cliente ya no lanza en un 200 reintentable |
+| 8 | Modal "Novedades" bloqueaba la app | `select.txt` PRIORIDAD 1: cerrar diálogos informativos |
+| 9 | Respuesta falsa `0` (la pantalla era otra) y `respuesta` tomada de hitos fallidos | Solo se lee la respuesta si todos los hitos se verificaron; `null` ⇒ `fallida` sin línea `respuesta:` |
+| 10 | El VLM no cuenta/filtra filas fiablemente ni sabe si hay más páginas | `extract_count`: transcribe cada página (235b, en paralelo), el **código** pagina (clic "Siguiente"+diff), un LLM de texto elige ids, el código cuenta; si no se confirma el final ⇒ `None` |
+| 11 | Latencia (~35 s/paso) | detección de la pantalla nueva en paralelo con `check` (`prefetched`); `provider.sort=latency`; `check` reutiliza la captura; `MAX_ATTEMPTS` 4→7 para exploración de menús |
+
+## 3. Medido (no supuesto)
+
+| Qué | Resultado |
+|---|---|
+| Detector 235b vs verdad de terreno (8 elementos) | error máx 8–9 px, 10–19 s |
+| Detector 30b | 3 px en una corrida, pero 12–33 s y una corrida con error de 765 px con el prompt compacto ⇒ se queda 235b |
+| Transcribir 4 páginas (Σ=45) | 235b: 45 ✔ · 72b: 45 ✔ · 30b: 43 ✘ |
+| Lectura directa "cuenta/filtra" con VLM | 37–44 de 45 ✘ (por eso se transcribe y se cuenta en código) |
+
+## 4. Pendiente
+
+E5 (ambigüedad de homónimos ⇒ `fallida` con NITs), y probar E1, E2, E4. Ver `docs/proximo_paso.md`.

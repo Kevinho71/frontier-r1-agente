@@ -1,0 +1,16 @@
+Tienes las filas de una tabla leída de un sistema de gestión. Selecciona las filas que cumplen TODAS las condiciones de la pregunta.
+
+PREGUNTA:
+{{task}}
+
+Reglas:
+- Evalúa cada fila por separado, comparando cada condición con la columna correspondiente.
+- Los nombres deben coincidir exactamente: "Ferretería Ruiz e Hijos" o "Ferretería Ruiz S.A.S." NO son "Ferretería Ruiz" (son otros registros homónimos).
+- Un estado debe coincidir con el pedido ("Vencida" no es "Pendiente" ni "Pagada").
+- Devuelve el identificador (primera columna) de CADA fila que cumple, exactamente como aparece.
+
+TABLA (columnas separadas por " | "):
+{{table}}
+
+Devuelve SOLO JSON:
+{"ids":["FV-1","FV-2"]}

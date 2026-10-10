@@ -37,7 +37,7 @@ async def main():
     task = sys.argv[1] if len(sys.argv) > 1 else "¿Cuántas facturas vencidas tiene Ferretería Ruiz?"
     if "--reset" in sys.argv:
         reset_desktop()
-    result = await run_task(task, URL, PWD, timeout_s=180, max_steps=20, reserve_s=30)
+    result = await run_task(task, URL, PWD, timeout_s=300, max_steps=40, reserve_s=30)
     print("=== RESULT ===")
     print(result.to_dict())
 

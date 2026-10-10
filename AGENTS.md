@@ -20,10 +20,12 @@ y lo opera **solo con píxeles** (prohibido el DOM), como lo haría un empleado 
 - ✅ **Fase 2** `src/vision/` — crop/downscale, diff por hash/píxeles, OCR barato.
 - ✅ **Fase 3** `src/model/` — router por capacidad + cliente OpenRouter (retry/429→agotado) + prompts.
 - ✅ **Fase 4** `src/agent/` — loop plan→act(batch)→check + resumen con formato exacto y redacción.
+- ✅ **Iteración 3** (planificación + estado entre pasos + lectura de tablas): **E3 pasa (45)**. Ver `docs/fase_4_hotfix_grounding.md`.
 - ⬜ Fase 5 `api/store/queue`, Fase 6 `logs/`, Fase 7 deploy.
 
 **Plan maestro:** `docs/plan_implementacion.md` (contiene credenciales → NO commitear).
 **Síntesis por fase:** `docs/fase_1_desktop.md`, `docs/fase_2_vision.md`, `docs/fase_3_model.md`, `docs/fase_4_agent.md`, `docs/fase_4_hotfix_grounding.md`.
+**Próximo paso (traspaso):** `docs/proximo_paso.md` — qué falla ahora (E5 y E1/E2/E4) y qué hacer.
 
 ## Entorno (cómo correr)
 
@@ -58,7 +60,11 @@ src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 - **`check()` decide el avance, no el grounding** (el `done` auto-reportado del modelo era falso; ver `docs/fase_4_hotfix_grounding.md`).
 - **CHECK/GROUND con `qwen3-vl-30b`** (`ling` no soporta `json_object`; `ui-tars` devuelve coords en píxeles y apunta mal).
 - **Grounding por detección (detect + select):** `vision/locate.py` detecta elementos con bounding boxes y `click_text` clica el centro de la caja; nunca se adivina una coordenada. Detector `qwen3-vl-235b` (validado: 30b da boxes mal).
-- **Pendiente: planificación.** El loop clica bien, pero ante "facturas vencidas" va a "Clientes" en vez de "Facturas" (error semántico de plan/select/check, no de grounding).
+- **Cajas de Qwen3-VL = escala 0–1000** (`scale_for`). Verificado contra la pantalla real; no tratarlas como píxeles.
+- **Plan por entidad objetivo** (genérico, sin nombres de la app): navegar al listado de la entidad; cliente/estado/fechas son filtros dentro de él. Cada hito lleva `pantalla_esperada` que usa `check`.
+- **`act()` con memoria** (`ActState`, `history`, `feedback`) y detección **en paralelo** con el `check` (`prefetched`).
+- **Conteos**: transcribir tabla (235b) + paginar por código + filtrar ids con LLM de texto + contar en código. Nunca confiar en que el VLM cuente ni en su `hay_mas_paginas`.
+- **Pendiente: E5** (homónimos ⇒ `fallida` nombrando NITs) y E1/E2/E4. Ver `docs/proximo_paso.md`.
 - **Contenedor persistente** (Fly.io/Railway), no Lambda (el WS VNC vive 5 min; cold-start come presupuesto).
 
 ## Cómo verificar
@@ -67,7 +73,7 @@ src/api/       (F5) FastAPI: /health, POST /tasks (<2s), GET /tasks/{id}
 - Oráculo dev: `POST /__reset` y `POST /__check` (endpoints del escritorio, Bearer con token).
 - Pruebas oficiales E1–E5 en `frontier-reto-1/pruebas/` (gitignored, son material).
 - Tests de `model/`: `PYTHONPATH=src python -m unittest tests.test_model -v` (sin red).
-- Tests de `agent/`: `PYTHONPATH=src python -m unittest tests.test_agent -v` (sin red).
+- Tests de `agent/`: `PYTHONPATH=src python -m unittest tests.test_agent -v` (sin red). Traza en vivo: `RETO1_TRACE=1`.
 - Verificar IDs del catálogo contra OpenRouter (necesita `OPENROUTER_API_KEY`): `PYTHONPATH=src python spikes/model_test.py`.
 
 ## Reglas de commit

@@ -16,6 +16,10 @@ from .router import mark_exhausted
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MAX_RETRIES = 3
 
+# Modelos "thinking" cuyos tokens de razonamiento consumen max_tokens (y truncan el JSON).
+# Para planificar/decidir no hace falta razonar: se desactiva (más rápido y barato).
+_NO_REASONING_PREFIXES = ("deepseek/",)
+
 
 class LLMError(Exception):
     def __init__(
@@ -148,6 +152,7 @@ async def chat(
     temperature: float = 0.0,
     timeout: float = 60.0,
     retries: int = MAX_RETRIES,
+    provider: dict | None = None,
 ) -> LLMResult:
     """Llamada a chat completions con retry/backoff y agotamiento en 429 no retryable.
 
@@ -166,6 +171,10 @@ async def chat(
     }
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
+    if provider:
+        payload["provider"] = provider  # p. ej. {"sort": "latency"}
+    if model.startswith(_NO_REASONING_PREFIXES):
+        payload["reasoning"] = {"enabled": False}
 
     last_err: LLMError | None = None
     for attempt in range(retries + 1):
@@ -178,7 +187,7 @@ async def chat(
                     last_err = LLMError(f"{model}: respuesta sin JSON válido", retryable=True)
                 else:
                     return result
-            if resp.status_code == 429:
+            elif resp.status_code == 429:
                 if not _retryable(_safe_json(resp)):
                     mark_exhausted(model)
                     raise LLMError(f"{model}: cuota agotada (429)", exhausted=True)
@@ -210,6 +219,7 @@ async def chat_vision(
     temperature: float = 0.0,
     timeout: float = 60.0,
     retries: int = MAX_RETRIES,
+    provider: dict | None = None,
 ) -> LLMResult:
     """Envía texto + captura (framebuffer RGBA) a un modelo de visión."""
     from vision.crop import downscale, to_data_url
@@ -235,4 +245,5 @@ async def chat_vision(
         temperature=temperature,
         timeout=timeout,
         retries=retries,
+        provider=provider,
     )

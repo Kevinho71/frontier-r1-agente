@@ -73,6 +73,54 @@
   </div>
 </header>
 
+<!-- ============ CONTRATO Y REGLAS (material oficial) ============ -->
+<section class="part">
+  <div class="head">
+    <div class="kicker">Actualizado con el material oficial</div>
+    <h2>Contrato exacto y reglas de evaluación</h2>
+  </div>
+
+  <h3>Payload de POST /tasks</h3>
+  <pre>{"tarea": "…",
+ "escritorio": {"url": "wss://…/websockify", "password": "…"}}</pre>
+  <p class="muted">El escritorio llega como <strong>URL websocket ya resuelta</strong> (wss://…/websockify), no como página. El agente la usa tal cual, sin derivar el path.</p>
+
+  <h3>Formato del resumen</h3>
+  <ul>
+    <li>Pregunta → <code>respuesta: &lt;valor&gt;</code> (el <strong>número primero</strong> en la línea).</li>
+    <li>Dos datos → <code>respuesta: a; b</code> (mismo orden en que se preguntan).</li>
+    <li>Tarea que debe fallar → el resumen nombra los datos que lo explican (<code>claves_razon</code>).</li>
+    <li><strong>Nunca</strong> repetir la contraseña del escritorio ni otros secretos.</li>
+  </ul>
+
+  <h3>Cómo se evalúa (3 chequeos)</h3>
+  <table>
+    <tr><th>Chequeo</th><th>Qué pide</th></tr>
+    <tr><td>Cambios esperados</td><td>la app quedó con los cambios exactos de la tarea</td></tr>
+    <tr><td>Sin acciones fuera de la tarea</td><td>nada de más (uno de más cuenta como acción destructiva)</td></tr>
+    <tr><td>Sin registros duplicados</td><td>no se creó dos veces lo mismo</td></tr>
+  </table>
+  <p class="muted">Una tarea cuenta como correcta solo si pasan los 3 y el <code>estado</code> coincide con el esperado. Reportar <code>terminada</code> cuando no quedó bien es un <strong>falso éxito</strong>.</p>
+
+  <h3>Gotchas de interacción (observados operando el escritorio)</h3>
+  <ul>
+    <li>Repintado hasta <strong>1s</strong> tras un clic → esperar antes de capturar (captura inmediata trae la pantalla vieja).</li>
+    <li>Clic con <strong>&lt;100ms</strong> entre bajar y soltar se ignora → mantener el botón ≥100ms.</li>
+    <li>Escribir sobre un campo con texto <strong>concatena</strong> → <code>Ctrl+A</code> (seleccionar todo) antes de escribir.</li>
+  </ul>
+
+  <h3>Tipos de tarea (de las 5 pruebas)</h3>
+  <table>
+    <tr><th>Tipo</th><th>Ejemplo</th><th>Resultado</th></tr>
+    <tr><td>Crear registro</td><td>E1 · registrar cliente</td><td>formulario + guardar</td></tr>
+    <tr><td>Actualizar campo</td><td>E2 · corregir dirección</td><td>buscar + editar + guardar</td></tr>
+    <tr><td>Pregunta (contar)</td><td>E3 · facturas vencidas</td><td><code>respuesta: 45</code></td></tr>
+    <tr><td>Exportar con filtros</td><td>E4 · pedidos de septiembre</td><td>reporte con rango de fechas</td></tr>
+    <tr><td>Ambigua → fallida</td><td>E5 · dos "Ana Torres"</td><td>reportar <code>fallida</code> + razón</td></tr>
+  </table>
+  <p class="muted">Fechas relativas ("ayer", "septiembre") se resuelven contra <strong>"Hoy" que muestra la app</strong>, no contra el reloj del agente.</p>
+</section>
+
 <!-- ===================== DISEÑO ===================== -->
 <section class="part">
   <div class="head">
@@ -222,10 +270,11 @@
 
   <h3>2.2 · Transporte al escritorio (validado)</h3>
   <div class="note">
-    El escritorio solo expone <code>wss://…/websockify</code> (el puerto 5900 no está abierto). El agente habla RFB
-    a través de un <strong>puente</strong>: abre el WebSocket con subprotocolo <code>binary</code> y le presenta a
-    <code>asyncvnc</code> un stream reader/writer. Probado sobre el escritorio real: framebuffer 1280×800,
-    screenshot ~1s, coordenadas 1:1 con input VNC.
+    El escritorio llega en <code>POST /tasks</code> como <code>wss://…/websockify</code> (el puerto 5900 no está
+    abierto). El agente habla RFB a través de un <strong>puente</strong>: abre el WebSocket con subprotocolo
+    <code>binary</code> y le presenta a <code>asyncvnc</code> un stream reader/writer. Probado sobre el escritorio
+    real: framebuffer 1280×800, screenshot ~1s, coordenadas 1:1 con input VNC. El clic se emite con ≥100ms de
+    pulsación (porque <code>asyncvnc.click()</code> no lo hace) y se espera ~1s antes de capturar.
   </div>
 
   <h3>2.3 · Deployment</h3>

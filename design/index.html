@@ -47,6 +47,7 @@
 
   .diagram{margin:18px 0;border:1px solid var(--line);border-radius:5px;padding:10px;background:#fff}
   .diagram img{width:100%;height:auto;display:block}
+  .diagram .cap{font-size:12.5px;color:var(--muted);margin:6px 0 0}
 
   .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
   .kpi div{border:1px solid var(--line);border-radius:5px;padding:11px 17px;text-align:center;min-width:120px}
@@ -71,54 +72,6 @@
     <span>Python 3.12 · asyncio</span>
   </div>
 </header>
-
-<!-- ============ CONTRATO Y REGLAS (material oficial) ============ -->
-<section class="part">
-  <div class="head">
-    <div class="kicker">Actualizado con el material oficial</div>
-    <h2>Contrato exacto y reglas de evaluación</h2>
-  </div>
-
-  <h3>Payload de POST /tasks</h3>
-  <pre>{"tarea": "…",
- "escritorio": {"url": "wss://…/websockify", "password": "…"}}</pre>
-  <p class="muted">El escritorio llega como <strong>URL websocket ya resuelta</strong> (wss://…/websockify), no como página. El agente la usa tal cual, sin derivar el path.</p>
-
-  <h3>Formato del resumen</h3>
-  <ul>
-    <li>Pregunta → <code>respuesta: &lt;valor&gt;</code> (el <strong>número primero</strong> en la línea).</li>
-    <li>Dos datos → <code>respuesta: a; b</code> (mismo orden en que se preguntan).</li>
-    <li>Tarea que debe fallar → el resumen nombra los datos que lo explican (<code>claves_razon</code>).</li>
-    <li><strong>Nunca</strong> repetir la contraseña del escritorio ni otros secretos.</li>
-  </ul>
-
-  <h3>Cómo se evalúa (3 chequeos)</h3>
-  <table>
-    <tr><th>Chequeo</th><th>Qué pide</th></tr>
-    <tr><td>Cambios esperados</td><td>la app quedó con los cambios exactos de la tarea</td></tr>
-    <tr><td>Sin acciones fuera de la tarea</td><td>nada de más (uno de más cuenta como acción destructiva)</td></tr>
-    <tr><td>Sin registros duplicados</td><td>no se creó dos veces lo mismo</td></tr>
-  </table>
-  <p class="muted">Una tarea cuenta como correcta solo si pasan los 3 y el <code>estado</code> coincide con el esperado. Reportar <code>terminada</code> cuando no quedó bien es un <strong>falso éxito</strong>.</p>
-
-  <h3>Gotchas de interacción (observados operando el escritorio)</h3>
-  <ul>
-    <li>Repintado hasta <strong>1s</strong> tras un clic → esperar antes de capturar (captura inmediata trae la pantalla vieja).</li>
-    <li>Clic con <strong>&lt;100ms</strong> entre bajar y soltar se ignora → mantener el botón ≥100ms.</li>
-    <li>Escribir sobre un campo con texto <strong>concatena</strong> → <code>Ctrl+A</code> (seleccionar todo) antes de escribir.</li>
-  </ul>
-
-  <h3>Tipos de tarea (de las 5 pruebas)</h3>
-  <table>
-    <tr><th>Tipo</th><th>Ejemplo</th><th>Resultado</th></tr>
-    <tr><td>Crear registro</td><td>E1 · registrar cliente</td><td>formulario + guardar</td></tr>
-    <tr><td>Actualizar campo</td><td>E2 · corregir dirección</td><td>buscar + editar + guardar</td></tr>
-    <tr><td>Pregunta (contar)</td><td>E3 · facturas vencidas</td><td><code>respuesta: 45</code></td></tr>
-    <tr><td>Exportar con filtros</td><td>E4 · pedidos de septiembre</td><td>reporte con rango de fechas</td></tr>
-    <tr><td>Ambigua → fallida</td><td>E5 · dos "Ana Torres"</td><td>reportar <code>fallida</code> + razón</td></tr>
-  </table>
-  <p class="muted">Fechas relativas ("ayer", "septiembre") se resuelven contra <strong>"Hoy" que muestra la app</strong>, no contra el reloj del agente.</p>
-</section>
 
 <!-- ===================== DISEÑO ===================== -->
 <section class="part">
@@ -153,6 +106,14 @@
         <li>Texto que concatena si no se limpia el campo antes.</li>
       </ul>
     </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h4>Gotchas de interacción (observados operando el escritorio)</h4>
+    <ul>
+      <li>Repintado hasta <strong>1s</strong> tras un clic → esperar antes de capturar (captura inmediata trae la pantalla vieja).</li>
+      <li>Clic con <strong>&lt;100ms</strong> entre bajar y soltar se ignora → mantener el botón ≥100ms.</li>
+      <li>Escribir sobre un campo con texto <strong>concatena</strong> → <code>Ctrl+A</code> (seleccionar todo) antes de escribir.</li>
+    </ul>
   </div>
   <div class="card" style="margin-top:16px">
     <h4>Lo que dejamos fuera (y por qué)</h4>
@@ -209,6 +170,15 @@
     <h4>CHECK · verificación en cascada (barato → caro)</h4>
     <p class="muted" style="margin:0">1) <strong>diff de imagen</strong> (hash de región) → 2) <strong>OCR</strong> (modelo barato) → 3) <strong>LLM visión</strong> solo si los anteriores fallan. Así cada verificación cuesta lo mínimo.</p>
   </div>
+  <div class="card" style="margin-top:16px">
+    <h4>Contrato del resumen</h4>
+    <ul>
+      <li>Pregunta → <code>respuesta: &lt;valor&gt;</code> (el <strong>número primero</strong> en la línea).</li>
+      <li>Dos datos → <code>respuesta: a; b</code> (mismo orden en que se preguntan).</li>
+      <li>Tarea que debe fallar → el resumen nombra los datos que lo explican (<code>claves_razon</code>).</li>
+      <li><strong>Nunca</strong> repetir la contraseña del escritorio ni otros secretos.</li>
+    </ul>
+  </div>
 
   <h3>1.5 · Zoom / recorte inteligente</h3>
   <div class="grid">
@@ -259,25 +229,34 @@
 
   <h3>1.9 · Plan para medir (antes de construir)</h3>
   <p>Validación concreta y reproducible, con oráculo objetivo, antes de escribir el servicio final.</p>
+
+  <h4 style="margin-top:14px">Casos de prueba (las 5 tareas oficiales)</h4>
+  <table>
+    <tr><th>Id</th><th>Instrucción (resumida)</th><th>Tipo</th><th>Resultado esperado</th></tr>
+    <tr><td>E1</td><td>Registrar cliente "Papelería Los Andes"</td><td>crear</td><td>4 campos exactos, sin duplicados</td></tr>
+    <tr><td>E2</td><td>Corregir dirección de "Distribuciones El Faro"</td><td>actualizar</td><td>1 campo <code>update</code></td></tr>
+    <tr><td>E3</td><td>¿Cuántas facturas vencidas de "Ferretería Ruiz"?</td><td>pregunta</td><td><code>respuesta: 45</code></td></tr>
+    <tr><td>E4</td><td>Exportar pedidos entregados en septiembre 2026</td><td>exportar</td><td>filtros estado + fechas</td></tr>
+    <tr><td>E5</td><td>Cambiar teléfono de "Ana Torres" (dos homónimas)</td><td>ambigua</td><td><code>fallida</code> + <code>claves_razon</code></td></tr>
+  </table>
+
   <div class="grid">
     <div class="card">
-      <h4>Casos de prueba (de las 5 tareas oficiales)</h4>
+      <h4>Cómo se evalúa (3 chequeos)</h4>
       <ul>
-        <li><strong>E1</strong> crear cliente → 4 campos exactos, sin duplicados.</li>
-        <li><strong>E2</strong> corregir dirección → 1 campo <code>update</code>.</li>
-        <li><strong>E3</strong> pregunta → <code>respuesta: 45</code>.</li>
-        <li><strong>E4</strong> exportar pedidos → filtros estado+fechas.</li>
-        <li><strong>E5</strong> ambigüedad → <code>fallida</code> nombrando <code>claves_razon</code>.</li>
+        <li><strong>Cambios esperados</strong>: la app quedó con los cambios exactos.</li>
+        <li><strong>Sin acciones fuera de la tarea</strong> (una de más = destructiva).</li>
+        <li><strong>Sin registros duplicados</strong>.</li>
       </ul>
-      <p class="muted" style="margin:0">Oráculo: <code>POST /__reset</code> + <code>POST /__check</code> (devuelve pass/fall por chequeo sin revelar valores).</p>
+      <p class="muted" style="margin:6px 0 0">Oráculo: <code>POST /__reset</code> + <code>POST /__check</code> (pass/fall por chequeo, sin revelar valores).</p>
     </div>
     <div class="card">
       <h4>Métricas (umbral de éxito)</h4>
       <ul>
         <li><strong>Tasa de éxito</strong>: 5/5 tareas correctas.</li>
         <li><strong>Costo por tarea</strong>: &lt; $0.05.</li>
-        <li><strong>Pasos por tarea</strong>: mide eficiencia del batching.</li>
-        <li><strong>Grounding accuracy</strong>: coordenadas a &lt;20px del target.</li>
+        <li><strong>Pasos por tarea</strong>: eficiencia del batching.</li>
+        <li><strong>Grounding accuracy</strong>: coords a &lt;20px del target.</li>
         <li><strong>Latencia de pantalla</strong>: shot → acción.</li>
       </ul>
     </div>
@@ -292,11 +271,13 @@
   </div>
   <p class="muted">El <em>cómo se conecta</em>: los componentes del sistema y el flujo de datos entre ellos.</p>
 
+  <h3>2.1 · Vista lógica</h3>
   <div class="diagram">
     <img src="architecture.svg" alt="Diagrama de arquitectura del agente computer-use">
+    <div class="cap">Componentes y flujo de datos: del juez al escritorio remoto, pasando por el worker del agente.</div>
   </div>
 
-  <h3>2.1 · Componentes</h3>
+  <h3>2.2 · Componentes</h3>
   <table>
     <tr><th>Módulo</th><th>Responsabilidad</th><th>Entrada</th><th>Salida</th></tr>
     <tr><td><code>api/</code></td><td>HTTP + auth Bearer + cola</td><td><code>POST /tasks</code></td><td><code>202 {task_id}</code> / <code>GET /tasks/{id}</code></td></tr>
@@ -309,20 +290,26 @@
     <tr><td><code>logs/</code></td><td>observabilidad</td><td>paso ejecutado</td><td>línea JSONL + artefacto</td></tr>
   </table>
 
-  <h3>2.2 · Transporte al escritorio (validado)</h3>
+  <h3>2.3 · Transporte al escritorio (validado)</h3>
   <div class="note">
-    El escritorio llega en <code>POST /tasks</code> como <code>wss://…/websockify</code> (el puerto 5900 no está
-    abierto). El agente habla RFB a través de un <strong>puente</strong>: abre el WebSocket con subprotocolo
-    <code>binary</code> y le presenta a <code>asyncvnc</code> un stream reader/writer. Probado sobre el escritorio
-    real: framebuffer 1280×800, screenshot ~1s, coordenadas 1:1 con input VNC. El clic se emite con ≥100ms de
+    El escritorio llega en <code>POST /tasks</code> como <code>{"escritorio": {"url": "wss://…/websockify", "password": "…"}}</code>
+    (el puerto 5900 no está abierto). El agente habla RFB a través de un <strong>puente</strong>: abre el WebSocket con
+    subprotocolo <code>binary</code> y le presenta a <code>asyncvnc</code> un stream reader/writer. Probado sobre el
+    escritorio real: framebuffer 1280×800, screenshot ~1s, coordenadas 1:1 con input VNC. El clic se emite con ≥100ms de
     pulsación (porque <code>asyncvnc.click()</code> no lo hace) y se espera ~1s antes de capturar.
   </div>
 
-  <h3>2.3 · Deployment</h3>
-  <p>Un <strong>contenedor único</strong> (Fly.io / Railway) con FastAPI + pool de workers asyncio. Sin SQS ni Lambda:
-  el WebSocket VNC vive 5 min y el cold start de Lambda comería presupuesto. Base de tareas en SQLite sobre volumen.</p>
+  <h3>2.4 · Despliegue</h3>
+  <p>Un <strong>contenedor único</strong> en un PaaS con capa gratuita (Fly.io / Railway) con FastAPI + pool de workers
+  asyncio. Sin SQS ni Lambda: el WebSocket VNC vive 5 min y el cold start de Lambda comería presupuesto. Base de tareas
+  en SQLite sobre un volumen. Los secretos (<code>TEAM_TOKEN</code>, <code>OPENROUTER_API_KEY</code>) van por variables de
+  entorno, nunca en el repo.</p>
+  <div class="diagram">
+    <img src="deployment.svg" alt="Diagrama de despliegue del servicio">
+    <div class="cap">Vista de despliegue: un contenedor expuesto a internet, que habla con el escritorio (wss) y con OpenRouter (https).</div>
+  </div>
 
-  <h3>2.4 · Observabilidad</h3>
+  <h3>2.5 · Observabilidad</h3>
   <p>Cada paso genera una línea <strong>JSONL</strong> (trazable, barata, redacta secretos):</p>
   <pre>{"ts":"…","task_id":"…","step":3,"phase":"act","actions":2,
  "model":"ui-tars-1.5-7b","tokens_in":1240,"cost_usd":0.00016,
@@ -333,7 +320,7 @@
     <li>Redacción automática de <code>password</code>, <code>Bearer</code>, <code>OPENROUTER_API_KEY</code>.</li>
   </ul>
 
-  <h3>2.5 · Trade-offs (qué descartamos y por qué)</h3>
+  <h3>2.6 · Trade-offs (qué descartamos y por qué)</h3>
   <table>
     <tr><th>Decisión</th><th>Elegido</th><th>Alternativa descartada</th><th>Por qué</th></tr>
     <tr><td>Transporte</td><td><code>asyncvnc</code> + puente WS↔RFB</td><td>Playwright sobre el canvas noVNC</td><td>más capas (browser→canvas→JS→websockify), más lento, y no da acceso al DOM real</td></tr>

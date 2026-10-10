@@ -1,0 +1,62 @@
+<svg width="1100" height="500" viewBox="0 0 1100 500" xmlns="http://www.w3.org/2000/svg" font-family="Georgia,'Times New Roman',serif">
+  <rect width="1100" height="500" fill="#ffffff"/>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1a1a1a"/>
+    </marker>
+  </defs>
+  <style>
+    .box{fill:#fafafa;stroke:#1a1a1a;stroke-width:1.2}
+    .boxi{fill:#ffffff;stroke:#1a1a1a;stroke-width:1}
+    .t{fill:#000000;font-size:15px;font-weight:700;font-family:Georgia,serif}
+    .s{fill:#444444;font-size:11.5px;font-family:Georgia,serif}
+    .l{fill:#111111;font-size:12px;font-family:'Courier New',monospace}
+    .edge{stroke:#1a1a1a;stroke-width:1.4;fill:none;marker-end:url(#arr)}
+    .h{fill:#333333;font-size:13px;font-family:Georgia,serif}
+  </style>
+
+  <text x="550" y="30" text-anchor="middle" class="h">Despliegue — un contenedor expuesto a internet, proveedor PaaS (Fly.io / Railway)</text>
+
+  <!-- JUEZ -->
+  <rect class="box" x="30" y="60" width="200" height="70"/>
+  <text class="t" x="130" y="92" text-anchor="middle">JUEZ</text>
+  <text class="s" x="130" y="112" text-anchor="middle">internet · Bearer</text>
+
+  <!-- CONTENEDOR -->
+  <rect class="box" x="300" y="50" width="480" height="310"/>
+  <text class="t" x="540" y="76" text-anchor="middle">CONTENEDOR</text>
+  <text class="s" x="540" y="94" text-anchor="middle">PaaS · Fly.io / Railway</text>
+
+  <rect class="boxi" x="320" y="108" width="440" height="52"/>
+  <text class="t" x="540" y="130" text-anchor="middle" font-size="13">FastAPI · servicio HTTP</text>
+  <text class="l" x="540" y="150" text-anchor="middle" font-size="10.5">GET /health · POST /tasks · GET /tasks/{id}</text>
+
+  <rect class="boxi" x="320" y="172" width="440" height="44"/>
+  <text class="t" x="540" y="199" text-anchor="middle" font-size="13">Workers asyncio (cola en memoria)</text>
+
+  <rect class="boxi" x="320" y="228" width="440" height="44"/>
+  <text class="t" x="540" y="255" text-anchor="middle" font-size="13">Volumen · SQLite (estado) + JSONL / evidencia</text>
+
+  <rect class="boxi" x="320" y="284" width="440" height="44"/>
+  <text class="t" x="540" y="311" text-anchor="middle" font-size="13">env · TEAM_TOKEN · OPENROUTER_API_KEY</text>
+
+  <!-- ESCRITORIO -->
+  <rect class="box" x="830" y="80" width="240" height="150"/>
+  <text class="t" x="950" y="106" text-anchor="middle" font-size="14">ESCRITORIO REMOTO</text>
+  <text class="s" x="950" y="126" text-anchor="middle">wss://…/websockify</text>
+  <text class="s" x="950" y="144" text-anchor="middle">VNC · password (por tarea)</text>
+  <text class="s" x="950" y="162" text-anchor="middle">1280×800 · solo píxeles</text>
+
+  <!-- OpenRouter -->
+  <rect class="box" x="830" y="300" width="240" height="70"/>
+  <text class="t" x="950" y="330" text-anchor="middle">OpenRouter</text>
+  <text class="s" x="950" y="350" text-anchor="middle">LLM visión (ground/plan/check)</text>
+
+  <!-- edges -->
+  <path class="edge" d="M230 95 L300 95"/>
+  <text class="s" x="236" y="88" font-size="10.5">https · Bearer</text>
+  <path class="edge" d="M780 134 L830 134"/>
+  <text class="s" x="786" y="127" font-size="10.5">wss</text>
+  <path class="edge" d="M780 335 L830 335"/>
+  <text class="s" x="786" y="328" font-size="10.5">https</text>
+</svg>

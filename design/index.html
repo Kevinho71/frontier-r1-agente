@@ -16,7 +16,6 @@
   .meta{color:var(--muted);font-size:12.5px;margin-top:14px}
   .meta span{display:inline-block;margin-right:18px}
 
-  /* secciones grandes */
   .part{margin-top:46px}
   .part>.head{border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:18px}
   .part>.head .kicker{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
@@ -127,7 +126,7 @@
     <div class="kicker">Sección 1</div>
     <h2>DISEÑO</h2>
   </div>
-  <p class="muted">El <em>qué</em> y el <em>por qué</em>: el problema, el enfoque y las decisiones de comportamiento del agente.</p>
+  <p class="muted">El <em>qué</em> y el <em>por qué</em>: el problema, sus límites y supuestos, y las decisiones de comportamiento del agente.</p>
 
   <h3>1.1 · Problema</h3>
   <p>Un sistema de gestión de 15 años, sin API, sin documentación y sin proveedor. Todo se opera a mano:
@@ -135,7 +134,37 @@
   <strong>agente que aprenda a usarlo como un empleado nuevo</strong> y ejecute tareas en lenguaje natural,
   incluso las que nunca ha visto. Hay <strong>5 sistemas</strong> como este: el agente debe adaptarse a cualquiera.</p>
 
-  <h3>1.2 · Restricciones y pivote central</h3>
+  <h3>1.2 · Supuestos, casos difíciles y alcance</h3>
+  <div class="grid">
+    <div class="card">
+      <h4>Supuestos (y por qué los hacemos)</h4>
+      <ul>
+        <li>El escritorio siempre llega por <code>wss://…/websockify</code> + contraseña — el canal es VNC, no HTTP.</li>
+        <li>Resolución fija 1280×800, una sola pantalla — el grounding asume coordenadas estables.</li>
+        <li>La UI responde a interacción estándar (menús, formularios, tablas), sin arrastrar/soltar complejo.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Casos difíciles (previstos)</h4>
+      <ul>
+        <li><strong>Ambigüedad</strong> (dos "Ana Torres") → hay que detectarla y reportar <code>fallida</code>, no adivinar.</li>
+        <li>Popups / modales imprevistos a mitad de un batch.</li>
+        <li>Fechas relativas ("ayer", "septiembre") contra el reloj de la app.</li>
+        <li>Texto que concatena si no se limpia el campo antes.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h4>Lo que dejamos fuera (y por qué)</h4>
+    <ul>
+      <li><strong>No leer el DOM</strong> aunque la app sea web: el brief lo prohíbe y el escritorio de evaluación no lo expone.</li>
+      <li><strong>No soportar multi-monitor ni resolución variable</strong>: la evaluación es fija en 1280×800.</li>
+      <li><strong>No persistir memoria entre tareas</strong>: cada tarea parte de un escritorio limpio.</li>
+      <li><strong>No usar proveedores externos de computer-use</strong>: solo LLM por API (restricción literal).</li>
+    </ul>
+  </div>
+
+  <h3>1.3 · Restricciones y pivote central</h3>
   <div class="grid">
     <div class="card">
       <h4>Restricciones</h4>
@@ -155,7 +184,7 @@
     </div>
   </div>
 
-  <h3>1.3 · Comportamiento del agente (híbrido)</h3>
+  <h3>1.4 · Comportamiento del agente (híbrido)</h3>
   <p>Tres fases que minimizan llamadas al modelo — la palanca de costo y latencia.</p>
   <div class="flow">
     <span class="step">PLAN</span><span class="arrow">→</span>
@@ -181,7 +210,7 @@
     <p class="muted" style="margin:0">1) <strong>diff de imagen</strong> (hash de región) → 2) <strong>OCR</strong> (modelo barato) → 3) <strong>LLM visión</strong> solo si los anteriores fallan. Así cada verificación cuesta lo mínimo.</p>
   </div>
 
-  <h3>1.4 · Zoom / recorte inteligente</h3>
+  <h3>1.5 · Zoom / recorte inteligente</h3>
   <div class="grid">
     <div class="card">
       <h4>Por qué</h4>
@@ -197,7 +226,7 @@
     </div>
   </div>
 
-  <h3>1.5 · Routing de modelos (3 niveles)</h3>
+  <h3>1.6 · Routing de modelos (3 niveles)</h3>
   <table>
     <tr><th>Rol</th><th>Modelo</th><th>Precio ($/M)</th><th>Por qué</th></tr>
     <tr><td><strong>PLAN</strong> (razonamiento)</td><td><code>deepseek-v4.1-flash</code></td><td>0.11 / 0.34</td><td>texto, barato, planea hitos</td></tr>
@@ -207,7 +236,7 @@
   </table>
   <p class="muted">Regla de cuota: ante 429 el modelo se marca <em>agotado</em> y se excluye el resto del día. Retry/backoff + jitter.</p>
 
-  <h3>1.6 · Presupuesto de los 5 minutos</h3>
+  <h3>1.7 · Presupuesto de los 5 minutos</h3>
   <div class="kpi">
     <div><div class="v">~10s</div><div class="l">Conexión VNC</div></div>
     <div><div class="v">~15s</div><div class="l">PLAN inicial</div></div>
@@ -217,7 +246,7 @@
   </div>
   <p class="muted">Cortes: <code>timeout ≤ 5 min</code> y <code>max_steps ≤ 25</code>, el que llegue primero. Se reservan ~30s para el resumen.</p>
 
-  <h3>1.7 · Manejo de excepciones</h3>
+  <h3>1.8 · Manejo de excepciones</h3>
   <table>
     <tr><th>Situación</th><th>Detección</th><th>Respuesta</th></tr>
     <tr><td>Pantalla no cambió</td><td>hash igual al previo</td><td>reintentar 1× con otro enfoque, luego re-plan</td></tr>
@@ -228,18 +257,30 @@
     <tr><td>Red/VNC caído</td><td>excepción socket</td><td>reconectar, 2 reintentos, luego fallida</td></tr>
   </table>
 
-  <h3>1.8 · Métricas de éxito</h3>
+  <h3>1.9 · Plan para medir (antes de construir)</h3>
+  <p>Validación concreta y reproducible, con oráculo objetivo, antes de escribir el servicio final.</p>
   <div class="grid">
-    <div class="card"><ul>
-      <li><strong>Costo por tarea</strong> ($ tokens).</li>
-      <li><strong>Tasa de éxito</strong> (terminada vs fallida).</li>
-      <li><strong>Pasos por tarea</strong> (eficiencia del batching).</li>
-    </ul></div>
-    <div class="card"><ul>
-      <li><strong>Latencia de pantalla</strong> (shot → acción).</li>
-      <li><strong>Grounding accuracy</strong> (coords a &lt;20px del target).</li>
-      <li><strong>Reconexiones / errores</strong> por tarea.</li>
-    </ul></div>
+    <div class="card">
+      <h4>Casos de prueba (de las 5 tareas oficiales)</h4>
+      <ul>
+        <li><strong>E1</strong> crear cliente → 4 campos exactos, sin duplicados.</li>
+        <li><strong>E2</strong> corregir dirección → 1 campo <code>update</code>.</li>
+        <li><strong>E3</strong> pregunta → <code>respuesta: 45</code>.</li>
+        <li><strong>E4</strong> exportar pedidos → filtros estado+fechas.</li>
+        <li><strong>E5</strong> ambigüedad → <code>fallida</code> nombrando <code>claves_razon</code>.</li>
+      </ul>
+      <p class="muted" style="margin:0">Oráculo: <code>POST /__reset</code> + <code>POST /__check</code> (devuelve pass/fall por chequeo sin revelar valores).</p>
+    </div>
+    <div class="card">
+      <h4>Métricas (umbral de éxito)</h4>
+      <ul>
+        <li><strong>Tasa de éxito</strong>: 5/5 tareas correctas.</li>
+        <li><strong>Costo por tarea</strong>: &lt; $0.05.</li>
+        <li><strong>Pasos por tarea</strong>: mide eficiencia del batching.</li>
+        <li><strong>Grounding accuracy</strong>: coordenadas a &lt;20px del target.</li>
+        <li><strong>Latencia de pantalla</strong>: shot → acción.</li>
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -292,14 +333,14 @@
     <li>Redacción automática de <code>password</code>, <code>Bearer</code>, <code>OPENROUTER_API_KEY</code>.</li>
   </ul>
 
-  <h3>2.5 · Trade-offs</h3>
+  <h3>2.5 · Trade-offs (qué descartamos y por qué)</h3>
   <table>
-    <tr><th>Decisión</th><th>Elegido</th><th>Alternativa descartada</th></tr>
-    <tr><td>Transporte</td><td><code>asyncvnc</code> + puente</td><td>Playwright: más capas, más lento, sin ventaja</td></tr>
-    <tr><td>Agente</td><td>híbrido plan + batched act</td><td>ReAct puro: 3× más llamadas al modelo</td></tr>
-    <tr><td>Coordenadas</td><td>normalizadas 0–1</td><td>píxeles absolutos: se rompen si cambia resolución</td></tr>
-    <tr><td>Cola</td><td>asyncio en memoria</td><td>SQS+Lambda: complejidad innecesaria aquí</td></tr>
-    <tr><td>Verificación</td><td>cascada hash→OCR→LLM</td><td>LLM único: 10× más caro por check</td></tr>
+    <tr><th>Decisión</th><th>Elegido</th><th>Alternativa descartada</th><th>Por qué</th></tr>
+    <tr><td>Transporte</td><td><code>asyncvnc</code> + puente WS↔RFB</td><td>Playwright sobre el canvas noVNC</td><td>más capas (browser→canvas→JS→websockify), más lento, y no da acceso al DOM real</td></tr>
+    <tr><td>Agente</td><td>híbrido plan + batched act</td><td>ReAct puro (una acción por llamada)</td><td>3× más llamadas → más tokens y más tiempo en los 5 min</td></tr>
+    <tr><td>Coordenadas</td><td>normalizadas 0–1</td><td>píxeles absolutos</td><td>se rompen si cambia la resolución del escritorio</td></tr>
+    <tr><td>Cola</td><td>asyncio en memoria (1 proceso)</td><td>SQS + Lambda</td><td>el WS VNC vive 5 min y el cold start come presupuesto; no necesitamos escala</td></tr>
+    <tr><td>Verificación</td><td>cascada hash → OCR → LLM</td><td>LLM visión para todo</td><td>10× más caro por cada check</td></tr>
   </table>
 </section>
 

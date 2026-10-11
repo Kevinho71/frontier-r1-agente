@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from desktop.capture import wait_and_capture
-from model import Capability, chat, chat_vision, load_prompt, select
+from model import Capability, chat_text, chat_vision, load_prompt, select
 from vision.locate import detect_elements
 
 from .actions import allows_retry, execute_actions, is_commit_label, normalize_text, resolve_element
@@ -143,7 +143,7 @@ async def act(
             + (f'\nNOTA: el elemento "{avoid}" ya fue clicado y su menú está abierto; ya no aparece en la lista. Elige una de las opciones nuevas, o abre otro menú de nivel superior.' if avoid else ""),
             elements=_format_elements(elements),
         )
-        res = await chat(
+        res = await chat_text(
             [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
             model,
             json_mode=True,

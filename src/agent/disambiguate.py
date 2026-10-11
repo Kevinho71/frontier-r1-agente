@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from model import Capability, chat, load_prompt, select
+from model import Capability, chat_text, load_prompt, select
 
 from .summarize import _ask_table, _table_text
 from .trace import trace
@@ -35,7 +35,7 @@ class Resolution:
 async def _match_ids(task: str, cols, rows) -> list[str]:
     model = select(Capability.PLAN) or "deepseek/deepseek-v4-flash"
     prompt = load_prompt("match_rows", task=task, table=_table_text(cols, rows))
-    res = await chat(
+    res = await chat_text(
         [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
         model,
         json_mode=True,

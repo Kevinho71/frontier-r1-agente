@@ -19,7 +19,7 @@ class RouterTest(unittest.TestCase):
 
     def test_check_usa_modelo_json(self):
         # ling-3.0-flash-vl devuelve vacío con json_object → CHECK debe usar qwen
-        self.assertEqual(CANDIDATES[Capability.CHECK][0], "qwen/qwen3-vl-30b-a3b-instruct")
+        self.assertEqual(CANDIDATES[Capability.CHECK][0], "qwen/qwen3-vl-235b-a22b-instruct")
         self.assertNotIn("inclusionai/ling-3.0-flash-vl", CANDIDATES[Capability.CHECK])
 
     def test_ground_primario_qwen(self):

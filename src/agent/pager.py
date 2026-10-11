@@ -8,7 +8,7 @@ from vision.diff import changed as frame_changed
 from vision.locate import detect_elements
 
 from .actions import normalize_text
-from .trace import trace
+from .trace import dump_frame, trace
 
 _NEXT_LABELS = ("siguiente", "next", "proxima", "pagina siguiente", "adelante")
 _PREV_LABELS = ("anterior", "previous", "prev", "pagina anterior", "atras")
@@ -81,6 +81,7 @@ class Pager:
         if not frame_changed(self.frame, new):
             trace("pager.fin")
             return None  # botón deshabilitado o último listado: la pantalla no cambió
+        dump_frame(new, "page")
         self.frame = new
         self.moved += 1
         return self.frame

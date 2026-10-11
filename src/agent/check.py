@@ -32,7 +32,7 @@ async def check(client, task: str, milestone: str, expected: str = "", *, frame=
     prompt = load_prompt("check", task=task, milestone=milestone, expected=expected or "(no especificada)")
     if ocr_text:
         prompt = f"{prompt}\n\nTexto OCR visible:\n{ocr_text}"
-    res = await chat_vision(prompt, cur, model, downscale_to=None, json_mode=True, max_tokens=256)
+    res = await chat_vision(prompt, cur, model, downscale_to=None, json_mode=True, max_tokens=256, provider={"sort": "latency"})
     parsed = res.parsed or {}
     ok = bool(parsed.get("ok"))
     desc = str(parsed.get("description", ""))

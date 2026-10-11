@@ -16,7 +16,7 @@ from .disambiguate import ambiguity_reason, resolve_record, describe_row
 from .pager import Pager
 from .plan import TaskRejected, plan
 from .redact import redact_text
-from .summarize import extract_answer, format_summary, is_question
+from .summarize import extract_answer, format_summary, is_count_question, is_question
 from .trace import dump_frame, trace
 from .types import Milestone, TaskResult
 
@@ -138,7 +138,7 @@ async def run_task(
                     feedback = chk.description
                     if chk.ok:
                         hito_ok = True
-                        if hito.locate:
+                        if hito.locate and not is_count_question(task):  # contar sobre un listado no apunta a UN registro
                             pager = Pager(client, act_res.frame_after, det_task)
                             try:
                                 res = await resolve_record(

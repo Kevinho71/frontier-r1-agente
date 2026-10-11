@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from model import Capability, chat, chat_vision, load_prompt, select
+from model import Capability, chat_text, chat_vision, load_prompt, select
 
 from .redact import redact_text
 from .trace import trace
@@ -121,7 +121,7 @@ async def _select_ids(task: str, cols: list[str], rows: list[list[str]]) -> list
     """Modelo de texto: qué filas cumplen la pregunta. El conteo lo hace el código."""
     model = select(Capability.PLAN) or "deepseek/deepseek-v4-flash"
     prompt = load_prompt("rows_filter", task=task, table=_table_text(cols, rows))
-    res = await chat(
+    res = await chat_text(
         [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
         model,
         json_mode=True,

@@ -30,9 +30,11 @@ CANDIDATES: dict[Capability, list[str]] = {
         "qwen/qwen3-vl-235b-a22b-instruct",
         "bytedance/ui-tars-1.5-7b",
     ],
+    # 30b dio 33 s y JSON inválido en una medición en vivo (variabilidad de proveedor); el 235b
+    # responde en ~3 s. Fiabilidad y latencia > costo (centavos por tarea).
     Capability.CHECK: [
-        "qwen/qwen3-vl-30b-a3b-instruct",
         "qwen/qwen3-vl-235b-a22b-instruct",
+        "qwen/qwen3-vl-30b-a3b-instruct",
     ],
     Capability.HARD: [
         "qwen/qwen3-vl-30b-a3b-instruct",

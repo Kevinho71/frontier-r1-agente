@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from desktop.capture import wait_and_capture
-from model import Capability, chat, load_prompt, select
+from model import Capability, chat_text, load_prompt, select
 from vision.ocr import extract_text
 
 from .trace import trace
@@ -51,7 +51,7 @@ async def plan(client, task: str) -> list[Milestone]:
     model = select(Capability.PLAN) or select(Capability.HARD) or "deepseek/deepseek-v4-flash"
     prompt = load_prompt("plan", task=task, context=context)
     for _ in range(2):
-        res = await chat(
+        res = await chat_text(
             [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
             model,
             json_mode=True,

@@ -217,6 +217,22 @@ async def chat(
     raise last_err or LLMError(f"{model}: fallo desconocido")
 
 
+TEXT_FALLBACK = "qwen/qwen3-vl-235b-a22b-instruct"
+
+
+async def chat_text(messages, model: str, **kw) -> LLMResult:
+    """Llamada de solo texto con respaldo: si el modelo primario falla (JSON inválido, 5xx,
+    agotado), reintenta una vez con un modelo distinto en vez de perder el paso."""
+    models = [m for m in (model, TEXT_FALLBACK) if m]
+    last: LLMError | None = None
+    for i, m in enumerate(dict.fromkeys(models)):
+        try:
+            return await chat(messages, m, **{**kw, "retries": 1 if i == 0 and len(models) > 1 else kw.get("retries", MAX_RETRIES)})
+        except LLMError as exc:
+            last = exc
+    raise last or LLMError("sin modelo disponible")
+
+
 async def chat_vision(
     text: str,
     frame,

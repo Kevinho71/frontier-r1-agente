@@ -565,5 +565,25 @@ class NotFoundTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(res.unique[0], "C1")
 
 
+class ChatTextFallbackTest(unittest.IsolatedAsyncioTestCase):
+    async def test_cae_al_respaldo_si_el_primario_falla(self):
+        import model.client as mc
+
+        calls = []
+
+        async def fake_chat(messages, model, **kw):
+            calls.append(model)
+            if model.startswith("deepseek"):
+                raise mc.LLMError("sin JSON", retryable=True)
+            return mc.LLMResult("{}", {}, model, 1, 1, 0.0)
+
+        orig = mc.chat
+        mc.chat = fake_chat
+        self.addCleanup(lambda: setattr(mc, "chat", orig))
+        res = await mc.chat_text([], "deepseek/deepseek-v4-flash", json_mode=True)
+        self.assertEqual(calls, ["deepseek/deepseek-v4-flash", mc.TEXT_FALLBACK])
+        self.assertEqual(res.model, mc.TEXT_FALLBACK)
+
+
 if __name__ == "__main__":
     unittest.main()
